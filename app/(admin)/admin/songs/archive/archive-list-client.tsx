@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
 import type { Song } from "@/shared/types/song";
 import { restoreSongAction, deleteSongAction } from "./actions";
 
@@ -18,10 +20,13 @@ export function ArchiveListClient({ songs: initialSongs }: ArchiveListClientProp
 
     const result = await restoreSongAction(id);
     if (result.error) {
-      alert(result.error);
+      toast.error("Failed to restore song", {
+        description: result.error,
+      });
       return;
     }
 
+    toast.success("Song restored successfully");
     setSongs(songs.filter((s) => s.id !== id));
     router.refresh();
   };
@@ -33,10 +38,13 @@ export function ArchiveListClient({ songs: initialSongs }: ArchiveListClientProp
 
     const result = await deleteSongAction(id);
     if (result.error) {
-      alert(result.error);
+      toast.error("Failed to delete song", {
+        description: result.error,
+      });
       return;
     }
 
+    toast.success("Song deleted permanently");
     setSongs(songs.filter((s) => s.id !== id));
     router.refresh();
   };

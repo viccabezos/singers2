@@ -84,11 +84,23 @@ This guide helps you resolve common issues when running Supabase integration tes
 **Symptoms:**
 - Tests fail with "permission denied" or "new row violates row-level security policy"
 - CRUD operations fail even though table exists
+- Error: "new row violates row-level security policy for table 'songs'"
 
 **Solution:**
-- Check Row Level Security (RLS) policies in Supabase
-- For testing, you may need to temporarily disable RLS or create policies that allow anonymous access
-- In Supabase Dashboard → Authentication → Policies, check your RLS policies
+1. **Set up RLS policies** - Run the SQL in `docs/supabase-rls-policies.sql` in your Supabase Dashboard → SQL Editor
+2. **Verify RLS is enabled** - Go to Supabase Dashboard → Table Editor → songs → Settings → RLS should be enabled
+3. **Check existing policies** - Go to Supabase Dashboard → Authentication → Policies → songs table
+4. **Quick fix for testing** - If you need to temporarily disable RLS for testing:
+   ```sql
+   ALTER TABLE songs DISABLE ROW LEVEL SECURITY;
+   ```
+   ⚠️ **Warning**: Only disable RLS for testing. Re-enable it and add proper policies before production.
+
+**Recommended Policies:**
+- Public SELECT: Allow reading visible, non-archived songs
+- Anon ALL: Allow all operations (INSERT, UPDATE, DELETE) since admin auth is handled via password middleware
+
+See `docs/supabase-rls-policies.sql` for complete policy setup.
 
 ### 6. Tests Create Test Data
 

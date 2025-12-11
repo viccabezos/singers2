@@ -3,10 +3,11 @@ import { getSongById } from "@/shared/lib/songs";
 import { notFound } from "next/navigation";
 import { SongForm } from "../song-form";
 
-export default async function EditSongPage({ params }: { params: { id: string } }) {
+export default async function EditSongPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAuth();
 
-  const song = await getSongById(params.id);
+  const { id } = await params;
+  const song = await getSongById(id);
 
   if (!song) {
     notFound();

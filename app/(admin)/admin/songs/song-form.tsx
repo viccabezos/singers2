@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { Song } from "@/shared/types/song";
 import { validateSong } from "@/shared/lib/song-validation";
 import { createSongAction } from "./actions";
@@ -60,21 +61,33 @@ export function SongForm({ song }: SongFormProps) {
         if (song) {
           const result = await updateSongAction(song.id, songData);
           if (result.error) {
+            toast.error("Failed to update song", {
+              description: result.error,
+            });
             setErrors({ submit: result.error });
             return;
           }
+          toast.success("Song updated successfully");
         } else {
           const result = await createSongAction(songData);
           if (result.error) {
+            toast.error("Failed to create song", {
+              description: result.error,
+            });
             setErrors({ submit: result.error });
             return;
           }
+          toast.success("Song created successfully");
         }
 
         router.push("/admin/songs");
         router.refresh();
       } catch (error) {
-        setErrors({ submit: "Failed to save song" });
+        const errorMessage = error instanceof Error ? error.message : "Failed to save song";
+        toast.error("Failed to save song", {
+          description: errorMessage,
+        });
+        setErrors({ submit: errorMessage });
       }
     });
   };
@@ -221,14 +234,20 @@ export function SongForm({ song }: SongFormProps) {
                 try {
                   const result = await duplicateSongAction(song.id);
                   if (result.error) {
-                    alert(result.error);
+                    toast.error("Failed to duplicate song", {
+                      description: result.error,
+                    });
                     return;
                   }
                   if (result.song) {
+                    toast.success("Song duplicated successfully");
                     router.push(`/admin/songs/${result.song.id}`);
                   }
                 } catch (error) {
-                  alert("Failed to duplicate song");
+                  const errorMessage = error instanceof Error ? error.message : "Failed to duplicate song";
+                  toast.error("Failed to duplicate song", {
+                    description: errorMessage,
+                  });
                 }
               }
             }}

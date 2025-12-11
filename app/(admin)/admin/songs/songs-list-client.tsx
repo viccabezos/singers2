@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import type { Song } from "@/shared/types/song";
 import { useRouter } from "next/navigation";
 
@@ -39,14 +40,20 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
       const result = await bulkUpdateVisibilityAction(Array.from(selectedIds), isVisible);
       
       if (result.error) {
-        alert(result.error);
+        toast.error("Failed to update visibility", {
+          description: result.error,
+        });
         return;
       }
 
+      toast.success(`${selectedIds.size} song(s) visibility updated`);
       router.refresh();
       setSelectedIds(new Set());
     } catch (error) {
-      alert("Failed to update visibility");
+      const errorMessage = error instanceof Error ? error.message : "Failed to update visibility";
+      toast.error("Failed to update visibility", {
+        description: errorMessage,
+      });
     }
   };
 

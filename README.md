@@ -184,6 +184,22 @@ If tests fail:
 - `/admin/dashboard` - Admin dashboard
 - `/admin/logout` - Logout handler
 
+## Database Setup
+
+### Row Level Security (RLS) Policies
+
+After creating the `songs` table, you need to set up RLS policies to allow operations:
+
+1. Go to Supabase Dashboard → SQL Editor
+2. Run the SQL from `docs/supabase-rls-policies.sql`
+
+This will:
+- Enable RLS on the songs table
+- Allow public to read visible, non-archived songs
+- Allow all operations (INSERT, UPDATE, DELETE) for the anon key (since admin auth is handled via password middleware)
+
+**Important**: Without these policies, you'll get "new row violates row-level security policy" errors when creating/updating songs.
+
 ## Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
@@ -191,3 +207,4 @@ If tests fail:
 - [Tailwind CSS](https://tailwindcss.com/)
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Supabase](https://supabase.com/docs)
+- [Supabase RLS Guide](https://supabase.com/docs/guides/auth/row-level-security)
