@@ -124,6 +124,55 @@ Follow Feature-Sliced Design principles:
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | Yes |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous key | Yes |
 
+### Finding Supabase Credentials
+
+1. Go to [https://supabase.com](https://supabase.com) and sign in
+2. Select your project (or create a new one)
+3. Go to **Project Settings** → **API**
+4. Find:
+   - **Project URL** → Use for `NEXT_PUBLIC_SUPABASE_URL`
+   - **Project API keys** → Use the `anon` `public` key for `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+## Testing
+
+This project uses **Bun's built-in test runner** for testing Supabase integration.
+
+### Running Tests
+
+```bash
+bun test
+```
+
+### Test Structure
+
+Tests are located alongside source files with `.test.ts` extension:
+- `shared/lib/supabase.test.ts` - Supabase integration tests
+
+### Test Coverage
+
+The test suite covers:
+- Environment variable validation
+- Supabase client initialization
+- Database connection testing
+- Basic CRUD operations (Create, Read, Update, Delete)
+- Error handling
+
+### Prerequisites for Tests
+
+Tests require valid Supabase credentials in `.env.local`:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Some tests will be skipped if environment variables are not set (with warnings logged).
+
+### Troubleshooting Tests
+
+If tests fail:
+1. Verify your `.env.local` file exists and contains valid Supabase credentials
+2. Check that your Supabase project is accessible
+3. Ensure database migrations have been run (for CRUD tests)
+4. See `docs/testing-troubleshooting.md` for detailed troubleshooting guide
+
 ## Routes
 
 ### Public Routes

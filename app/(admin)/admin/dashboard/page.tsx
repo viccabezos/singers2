@@ -23,12 +23,31 @@ export default async function DashboardPage() {
           </Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
+          <Link
+            href="/admin/songs"
+            className="rounded-lg bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:bg-zinc-900"
+          >
             <h2 className="text-lg font-medium text-black dark:text-zinc-50">
-              Content Management
+              Songs
             </h2>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Manage your website content
+              Manage your song library
+            </p>
+          </Link>
+          <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
+            <h2 className="text-lg font-medium text-black dark:text-zinc-50">
+              Playlists
+            </h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Coming soon
+            </p>
+          </div>
+          <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
+            <h2 className="text-lg font-medium text-black dark:text-zinc-50">
+              Events
+            </h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Coming soon
             </p>
           </div>
         </div>
