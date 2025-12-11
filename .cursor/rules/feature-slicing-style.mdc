@@ -1,0 +1,259 @@
+---
+name: feature-slice-design
+description: Feature Slice Design (FSD) architecture for web applications. Use this when creating new features, organizing code, or refactoring existing modules.
+globs: **/*.ts, **/*.tsx
+alwaysApply: false
+---
+
+# Feature Slice Design (FSD) Architecture
+
+This project follows **Feature Slice Design** for organizing frontend code. FSD provides a standardized, scalable architecture that keeps features isolated, dependencies explicit, and codebase navigable.
+
+## Layer Structure
+
+Organize code into these layers (top to bottom = high-level to low-level):
+
+```
+
+├── app/           # Next.js App Router (routing, layouts, pages)
+├── views/         # Full page compositions (optional, for complex pages)
+├── widgets/       # Self-contained UI blocks (header, sidebar, vehicle-card)
+├── features/      # User interactions (upload-invoice, add-vehicle, edit-mileage)
+
+├── shared/        # Reusable infrastructure (ui/, lib/, api/, config/, types/)
+```
+
+### Layer Rules
+
+1. **Imports flow downward only**: A layer can only import from layers below it
+
+   - ✅ `features/` imports from `entities/`, `shared/`
+   - ❌ `entities/` imports from `features/`
+
+2. **No cross-slice imports within the same layer**:
+
+   - ✅ `features/upload-invoice/` imports from `entities/invoice/`
+   - ❌ `features/upload-invoice/` imports from `features/add-vehicle/`
+
+3. **Public API via index files**: Each slice exposes only what's needed through `index.ts`
+
+## Slice Structure
+
+Each slice (feature, entity, widget) follows this internal structure:
+
+```
+features/upload-invoice/
+├── ui/            # React components
+│   ├── upload-form.tsx
+│   ├── preview-card.tsx
+│   └── index.ts
+├── model/         # Business logic, state, types
+│   ├── types.ts
+│   ├── store.ts   # Zustand/Jotai if needed
+│   └── index.ts
+├── api/           # Data fetching (Convex queries/mutations)
+│   ├── queries.ts
+│   └── index.ts
+├── lib/           # Slice-specific utilities
+│   └── parse-invoice.ts
+└── index.ts       # Public API
+```
+
+### Segment Guidelines
+
+- **ui/**: Only presentational components. Keep logic minimal.
+- **model/**: Types, interfaces, state management, business rules.
+- **api/**: Convex hooks, queries, mutations. Isolate data layer.
+- **lib/**: Helper functions specific to this slice.
+
+## Naming Conventions
+
+- **Folders**: `kebab-case` (e.g., `upload-invoice/`, `service-record/`)
+- **Files**: `kebab-case.tsx` (e.g., `upload-form.tsx`, `vehicle-card.tsx`)
+- **Components**: `PascalCase` (e.g., `UploadForm`, `VehicleCard`)
+- **Hooks**: `camelCase` with `use` prefix (e.g., `useUploadInvoice`)
+- **Types**: `PascalCase` (e.g., `Invoice`, `Vehicle`, `ServiceRecord`)
+
+## Public API Pattern
+
+Every slice must have an `index.ts` that explicitly exports its public interface:
+
+```typescript
+// features/upload-invoice/index.ts
+export { UploadInvoiceForm } from "./ui/upload-form";
+export { useUploadInvoice } from "./api/queries";
+export type { InvoiceUploadData } from "./model/types";
+```
+
+**Never import from internal paths**:
+
+- ✅ `import { UploadInvoiceForm } from '@/features/upload-invoice'`
+- ❌ `import { UploadInvoiceForm } from '@/features/upload-invoice/ui/upload-form'`
+
+## Shared Layer Organization
+
+The `shared/` layer contains truly reusable, feature-agnostic code:
+
+```
+shared/
+├── ui/            # Design system components (Button, Card, Input)
+├── lib/           # Generic utilities (formatDate, cn, debounce)
+├── api/           # API client setup, base hooks
+├── config/        # App configuration, constants
+├── types/         # Global TypeScript types
+└── hooks/         # Generic hooks (useMediaQuery, useDebounce)
+```
+
+<!-- ## Entities Layer
+
+Entities represent core business objects. For Go Vroum Vroum:
+
+```
+entities/
+├── vehicle/       # Car, motorcycle, truck data
+├── invoice/       # Service invoices and receipts
+├── service-record/# Individual maintenance entries
+├── user/          # User profile and preferences
+└── reminder/      # Maintenance reminders
+```
+
+Each entity slice contains:
+
+- Type definitions
+- UI components for displaying the entity
+- API hooks for CRUD operations
+- Validation schemas -->
+
+## Features Layer
+
+Features represent user actions and interactions:
+
+```
+features/
+├── upload-invoice/    # OCR upload flow
+├── add-vehicle/       # Vehicle registration
+├── edit-mileage/      # Update odometer reading
+├── search-history/    # Search service records
+├── export-report/     # Generate PDF reports
+└── auth/              # Authentication flows
+```
+
+## Widgets Layer
+
+Widgets are self-contained UI blocks composed of entities and features:
+
+```
+widgets/
+├── header/            # App header with navigation
+├── sidebar/           # Dashboard sidebar
+├── vehicle-summary/   # Vehicle overview card
+├── recent-services/   # Recent service list
+└── quick-actions/     # Action buttons panel
+```
+
+## Integration with Next.js App Router
+
+The `app/` directory handles routing only. Keep it thin:
+
+```typescript
+// app/dashboard/page.tsx
+import { VehicleList } from "@/widgets/vehicle-list";
+import { QuickActions } from "@/widgets/quick-actions";
+
+export default function DashboardPage() {
+  return (
+    <main>
+      <QuickActions />
+      <VehicleList />
+    </main>
+  );
+}
+```
+
+Pages should:
+
+- Import from widgets, features, 
+- Handle route-specific logic (params, searchParams)
+- Define metadata
+- **Not** contain business logic
+
+## Path Aliases
+
+Configure these aliases in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/shared/*": ["./src/shared/*"],
+      // "@/entities/*": ["./src/entities/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/widgets/*": ["./src/widgets/*"]
+    }
+  }
+}
+```
+
+## Migration Strategy
+
+When refactoring existing code:
+
+1. Start with `shared/` - move generic utilities and UI components
+<!-- 2. Identify entities from the domain model -->
+3. Extract features based on user actions
+4. Compose widgets from features
+5. Simplify page components to thin orchestrators
+
+## Common Patterns
+
+### Cross-Feature Communication
+
+When features need to communicate, use:
+
+- **Shared state**: Lift state to a common parent or use global store
+- **Events**: Custom events or pub/sub pattern
+- **URL state**: Query parameters for shareable state
+
+### Conditional Features
+
+```typescript
+// features/premium-export/index.ts
+export { PremiumExportButton } from "./ui/export-button";
+export { canUsePremiumExport } from "./model/permissions";
+```
+
+### Feature Flags
+
+Keep feature flags in `shared/config/`:
+
+```typescript
+// shared/config/features.ts
+export const FEATURES = {
+  OCR_UPLOAD: true,
+  BULK_IMPORT: false,
+  AI_SUGGESTIONS: false,
+} as const;
+```
+
+## Anti-Patterns to Avoid
+
+❌ **God components**: Components doing too much (fetching, logic, rendering)
+❌ **Barrel file abuse**: Don't re-export everything; be intentional
+❌ **Cross-slice imports**: Never import between slices in the same layer
+❌ **Business logic in UI**: Keep components presentational
+❌ **Shared folder bloat**: Only truly reusable code belongs in shared
+❌ **Deep nesting**: Keep slice structure flat (max 2-3 levels)
+
+## Checklist for New Features
+
+When creating a new feature:
+
+- [ ] Identify the correct layer (feature vs entity vs widget)
+- [ ] Create slice folder with proper structure
+- [ ] Define types in `model/types.ts`
+- [ ] Implement API hooks in `api/`
+- [ ] Build UI components in `ui/`
+- [ ] Export public API via `index.ts`
+- [ ] Verify no upward or cross-slice imports
+- [ ] Add to relevant widget or page
