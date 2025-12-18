@@ -34,14 +34,17 @@ export default async function DashboardPage() {
               Manage your song library
             </p>
           </Link>
-          <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
+          <Link
+            href="/admin/playlists"
+            className="rounded-lg bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:bg-zinc-900"
+          >
             <h2 className="text-lg font-medium text-black dark:text-zinc-50">
               Playlists
             </h2>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Coming soon
+              Organize songs into playlists
             </p>
-          </div>
+          </Link>
           <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
             <h2 className="text-lg font-medium text-black dark:text-zinc-50">
               Events

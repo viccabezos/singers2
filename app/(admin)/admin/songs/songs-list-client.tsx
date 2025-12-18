@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import type { Song } from "@/shared/types/song";
 import { useRouter } from "next/navigation";
+import { Breadcrumbs } from "@/shared/ui/breadcrumbs";
 
 interface SongsListClientProps {
   songs: Song[];
@@ -150,6 +151,12 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
   return (
     <div className="min-h-screen bg-zinc-50 p-4 dark:bg-black sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
+        <Breadcrumbs
+          items={[
+            { label: "Dashboard", href: "/admin/dashboard" },
+            { label: "Songs" },
+          ]}
+        />
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-3xl">

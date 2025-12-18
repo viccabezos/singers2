@@ -1,18 +1,9 @@
 import { requireAuth } from "../../middleware";
-import { getSongById } from "@/shared/lib/songs";
-import { notFound } from "next/navigation";
-import { SongForm } from "../song-form";
+import { PlaylistForm } from "../playlist-form";
 import { Breadcrumbs } from "@/shared/ui/breadcrumbs";
 
-export default async function EditSongPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function NewPlaylistPage() {
   await requireAuth();
-
-  const { id } = await params;
-  const song = await getSongById(id);
-
-  if (!song) {
-    notFound();
-  }
 
   return (
     <div className="min-h-screen bg-zinc-50 p-4 dark:bg-black sm:p-6 lg:p-8">
@@ -20,19 +11,19 @@ export default async function EditSongPage({ params }: { params: Promise<{ id: s
         <Breadcrumbs
           items={[
             { label: "Dashboard", href: "/admin/dashboard" },
-            { label: "Songs", href: "/admin/songs" },
-            { label: song.title },
+            { label: "Playlists", href: "/admin/playlists" },
+            { label: "New Playlist" },
           ]}
         />
         <div className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-3xl">
-            Edit Song
+            Create New Playlist
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            {song.title}
+            Add a new playlist to organize your songs
           </p>
         </div>
-        <SongForm song={song} />
+        <PlaylistForm />
       </div>
     </div>
   );

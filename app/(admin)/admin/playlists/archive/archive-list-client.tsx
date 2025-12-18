@@ -4,49 +4,49 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import type { Song } from "@/shared/types/song";
-import { restoreSongAction, deleteSongAction } from "./actions";
+import type { PlaylistWithSongCount } from "@/shared/types/playlist";
+import { restorePlaylistAction, deletePlaylistAction } from "./actions";
 import { Breadcrumbs } from "@/shared/ui/breadcrumbs";
 
 interface ArchiveListClientProps {
-  songs: Song[];
+  playlists: PlaylistWithSongCount[];
 }
 
-export function ArchiveListClient({ songs: initialSongs }: ArchiveListClientProps) {
+export function ArchiveListClient({ playlists: initialPlaylists }: ArchiveListClientProps) {
   const router = useRouter();
-  const [songs, setSongs] = useState(initialSongs);
+  const [playlists, setPlaylists] = useState(initialPlaylists);
 
   const handleRestore = async (id: string) => {
-    if (!confirm("Are you sure you want to restore this song?")) return;
+    if (!confirm("Are you sure you want to restore this playlist?")) return;
 
-    const result = await restoreSongAction(id);
+    const result = await restorePlaylistAction(id);
     if (result.error) {
-      toast.error("Failed to restore song", {
+      toast.error("Failed to restore playlist", {
         description: result.error,
       });
       return;
     }
 
-    toast.success("Song restored successfully");
-    setSongs(songs.filter((s) => s.id !== id));
+    toast.success("Playlist restored successfully");
+    setPlaylists(playlists.filter((p) => p.id !== id));
     router.refresh();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this song? This cannot be undone.")) {
+    if (!confirm("Are you sure you want to permanently delete this playlist? This cannot be undone.")) {
       return;
     }
 
-    const result = await deleteSongAction(id);
+    const result = await deletePlaylistAction(id);
     if (result.error) {
-      toast.error("Failed to delete song", {
+      toast.error("Failed to delete playlist", {
         description: result.error,
       });
       return;
     }
 
-    toast.success("Song deleted permanently");
-    setSongs(songs.filter((s) => s.id !== id));
+    toast.success("Playlist deleted permanently");
+    setPlaylists(playlists.filter((p) => p.id !== id));
     router.refresh();
   };
 
@@ -56,53 +56,53 @@ export function ArchiveListClient({ songs: initialSongs }: ArchiveListClientProp
         <Breadcrumbs
           items={[
             { label: "Dashboard", href: "/admin/dashboard" },
-            { label: "Songs", href: "/admin/songs" },
+            { label: "Playlists", href: "/admin/playlists" },
             { label: "Archive" },
           ]}
         />
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-black dark:text-zinc-50 sm:text-3xl">
-              Archived Songs
+              Archived Playlists
             </h1>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Restore or permanently delete archived songs
+              Restore or permanently delete archived playlists
             </p>
           </div>
         </div>
 
         <div className="rounded-lg bg-white shadow-sm dark:bg-zinc-900">
-          {songs.length === 0 ? (
+          {playlists.length === 0 ? (
             <div className="p-8 text-center text-zinc-600 dark:text-zinc-400">
-              No archived songs
+              No archived playlists
             </div>
           ) : (
             <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {songs.map((song) => (
+              {playlists.map((playlist) => (
                 <div
-                  key={song.id}
+                  key={playlist.id}
                   className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-12 sm:items-center"
                 >
                   <div className="col-span-6">
-                    <div className="font-medium text-zinc-900 dark:text-zinc-50">{song.title}</div>
-                    {song.artist_composer && (
-                      <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {song.artist_composer}
+                    <div className="font-medium text-zinc-900 dark:text-zinc-50">{playlist.name}</div>
+                    {playlist.description && (
+                      <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400 line-clamp-1">
+                        {playlist.description}
                       </div>
                     )}
                   </div>
                   <div className="col-span-3 text-sm text-zinc-600 dark:text-zinc-400">
-                    {song.language || "-"}
+                    {playlist.song_count} {playlist.song_count === 1 ? "song" : "songs"}
                   </div>
                   <div className="col-span-3 flex gap-2">
                     <button
-                      onClick={() => handleRestore(song.id)}
+                      onClick={() => handleRestore(playlist.id)}
                       className="rounded-md bg-green-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-green-700"
                     >
                       Restore
                     </button>
                     <button
-                      onClick={() => handleDelete(song.id)}
+                      onClick={() => handleDelete(playlist.id)}
                       className="rounded-md bg-red-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-red-700"
                     >
                       Delete
@@ -116,10 +116,10 @@ export function ArchiveListClient({ songs: initialSongs }: ArchiveListClientProp
 
         <div className="mt-4">
           <Link
-            href="/admin/songs"
+            href="/admin/playlists"
             className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
           >
-            ← Back to Songs
+            ← Back to Playlists
           </Link>
         </div>
       </div>
