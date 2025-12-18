@@ -45,11 +45,19 @@ export async function getSongs(filters?: SongFilters): Promise<Song[]> {
 }
 
 export async function getSongById(id: string): Promise<Song | null> {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1428a01a-6442-49ba-805c-35fb10fcf189',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'songs.ts:47',message:'getSongById entry',data:{id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
+  
   const { data, error } = await supabase
     .from("songs")
     .select("*")
     .eq("id", id)
     .single();
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1428a01a-6442-49ba-805c-35fb10fcf189',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'songs.ts:52',message:'getSongById query result',data:{hasError:!!error,errorCode:error?.code,hasData:!!data,dataId:data?.id,dataVisible:data?.is_visible,dataArchived:data?.is_archived},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -62,6 +70,10 @@ export async function getSongById(id: string): Promise<Song | null> {
 }
 
 export async function getVisibleSongById(id: string): Promise<Song | null> {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1428a01a-6442-49ba-805c-35fb10fcf189',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'songs.ts:64',message:'getVisibleSongById entry',data:{id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
+  
   const { data, error } = await supabase
     .from("songs")
     .select("*")
@@ -69,6 +81,10 @@ export async function getVisibleSongById(id: string): Promise<Song | null> {
     .eq("is_visible", true)
     .eq("is_archived", false)
     .single();
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1428a01a-6442-49ba-805c-35fb10fcf189',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'songs.ts:72',message:'getVisibleSongById query result',data:{hasError:!!error,errorCode:error?.code,errorMessage:error?.message,hasData:!!data,dataId:data?.id,dataVisible:data?.is_visible,dataArchived:data?.is_archived},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -104,6 +120,10 @@ export async function createSong(input: SongCreateInput): Promise<Song> {
 }
 
 export async function updateSong(id: string, input: SongUpdateInput): Promise<Song> {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1428a01a-6442-49ba-805c-35fb10fcf189',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'songs.ts:106',message:'updateSong entry',data:{id,input},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+  
   const { data, error } = await supabase
     .from("songs")
     .update({
@@ -113,6 +133,10 @@ export async function updateSong(id: string, input: SongUpdateInput): Promise<So
     .eq("id", id)
     .select()
     .single();
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1428a01a-6442-49ba-805c-35fb10fcf189',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'songs.ts:115',message:'updateSong query result',data:{hasError:!!error,errorCode:error?.code,errorMessage:error?.message,hasData:!!data,dataId:data?.id,dataVisible:data?.is_visible,dataArchived:data?.is_archived},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
 
   if (error) {
     throw new Error(`Failed to update song: ${error.message}`);

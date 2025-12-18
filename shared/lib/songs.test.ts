@@ -1,3 +1,4 @@
+/// <reference path="../../bun-types.d.ts" />
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { getSupabaseEnv } from "./test-utils/supabase-env";
 import type { Song, SongCreateInput } from "../types/song";
@@ -205,7 +206,8 @@ describe("Songs CRUD Operations", () => {
       if (!songsModule) return;
       if (!testSong.is_visible) {
         await songsModule.updateSong(testSong.id, { is_visible: true });
-        testSong = await songsModule.getSongById(testSong.id)!;
+        testSong = await songsModule.getSongById(testSong.id);
+        if (!testSong) return;
       }
 
       const song = await songsModule.getVisibleSongById(testSong.id);

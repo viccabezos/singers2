@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import type { Song } from "@/shared/types/song";
@@ -14,6 +14,11 @@ interface SongsListClientProps {
 export function SongsListClient({ songs: initialSongs, languages }: SongsListClientProps) {
   const router = useRouter();
   const [songs, setSongs] = useState(initialSongs);
+
+  // Sync local state with prop changes (from router.refresh())
+  useEffect(() => {
+    setSongs(initialSongs);
+  }, [initialSongs]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [artistFilter, setArtistFilter] = useState("");
@@ -46,12 +51,79 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
         return;
       }
 
+      // Optimistically update local state
+      setSongs((prevSongs) =>
+        prevSongs.map((song) =>
+          selectedIds.has(song.id) ? { ...song, is_visible: isVisible } : song
+        )
+      );
+
       toast.success(`${selectedIds.size} song(s) visibility updated`);
-      router.refresh();
       setSelectedIds(new Set());
+      router.refresh();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update visibility";
       toast.error("Failed to update visibility", {
+        description: errorMessage,
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Are you sure you want to archive ${selectedIds.size} song(s)? They will be removed from all playlists.`)) {
+      return;
+    }
+
+    try {
+      const { bulkArchiveSongsAction } = await import("./bulk-delete/actions");
+      const result = await bulkArchiveSongsAction(Array.from(selectedIds));
+      
+      if (result.error) {
+        toast.error("Failed to archive songs", {
+          description: result.error,
+        });
+        return;
+      }
+
+      // Optimistically remove songs from list
+      setSongs((prevSongs) => prevSongs.filter((song) => !selectedIds.has(song.id)));
+
+      toast.success(`${selectedIds.size} song(s) archived successfully`);
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to archive songs";
+      toast.error("Failed to archive songs", {
+        description: errorMessage,
+      });
+    }
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to archive "${title}"? It will be removed from all playlists.`)) {
+      return;
+    }
+
+    try {
+      const { archiveSongAction } = await import("./[id]/actions");
+      const result = await archiveSongAction(id);
+      
+      if (result.error) {
+        toast.error("Failed to archive song", {
+          description: result.error,
+        });
+        return;
+      }
+
+      // Optimistically remove song from list
+      setSongs((prevSongs) => prevSongs.filter((song) => song.id !== id));
+
+      toast.success("Song archived successfully");
+      router.refresh();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to archive song";
+      toast.error("Failed to archive song", {
         description: errorMessage,
       });
     }
@@ -185,6 +257,12 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
               Hide Selected
             </button>
             <button
+              onClick={handleBulkDelete}
+              className="rounded-md bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700"
+            >
+              Archive Selected
+            </button>
+            <button
               onClick={() => setSelectedIds(new Set())}
               className="rounded-md bg-zinc-600 px-3 py-1 text-sm font-medium text-white hover:bg-zinc-700"
             >
@@ -264,6 +342,12 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
                     >
                       Edit
                     </Link>
+                    <button
+                      onClick={() => handleDelete(song.id, song.title)}
+                      className="rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-900 transition-colors hover:bg-red-200 dark:bg-red-900/20 dark:text-red-200 dark:hover:bg-red-900/30"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               ))}
