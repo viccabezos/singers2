@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Music } from "lucide-react";
 import { toast } from "sonner";
 import type { Playlist, PlaylistStatus, PlaylistSong } from "@/shared/types/playlist";
 import type { Song } from "@/shared/types/song";
 import { validatePlaylist } from "@/shared/lib/playlist-validation";
+import { SortableContentTable, type ContentColumn } from "@/shared/ui";
 import { createPlaylistAction } from "./actions";
 import { 
   updatePlaylistAction, 
@@ -26,6 +28,8 @@ const STATUS_OPTIONS: { value: PlaylistStatus; label: string }[] = [
   { value: "in_progress", label: "In Progress" },
 ];
 
+type PlaylistSongItem = PlaylistSong & { song: Song };
+
 export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = [] }: PlaylistFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -37,16 +41,10 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
     status: playlist?.status || "hidden" as PlaylistStatus,
   });
 
-  const [songs, setSongs] = useState<(PlaylistSong & { song: Song })[]>(playlistSongs);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showSongPicker, setShowSongPicker] = useState(false);
+  const [songs, setSongs] = useState<PlaylistSongItem[]>(playlistSongs);
 
-  // Filter available songs (not already in playlist)
+  // Get songs not already in playlist
   const songsInPlaylist = new Set(songs.map((s) => s.song_id));
-  const filteredAvailableSongs = availableSongs.filter(
-    (song) => !songsInPlaylist.has(song.id) && 
-    (searchQuery === "" || song.title.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,10 +108,10 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
     });
   };
 
-  const handleAddSong = async (songId: string) => {
+  const handleAddSong = useCallback(async (song: Song) => {
     if (!playlist) return;
 
-    const result = await addSongToPlaylistAction(playlist.id, songId);
+    const result = await addSongToPlaylistAction(playlist.id, song.id);
     if (result.error) {
       toast.error("Failed to add song", {
         description: result.error,
@@ -121,31 +119,29 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
       return;
     }
 
-    // Find the song and add it to local state
-    const song = availableSongs.find((s) => s.id === songId);
-    if (song) {
-      setSongs((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          playlist_id: playlist.id,
-          song_id: songId,
-          position: prev.length + 1,
-          created_at: new Date().toISOString(),
-          song,
-        },
-      ]);
-    }
+    setSongs((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        playlist_id: playlist.id,
+        song_id: song.id,
+        position: prev.length + 1,
+        created_at: new Date().toISOString(),
+        song,
+      },
+    ]);
 
     toast.success("Song added to playlist");
-    setShowSongPicker(false);
-    setSearchQuery("");
-  };
+  }, [playlist]);
 
-  const handleRemoveSong = async (songId: string) => {
+  const handleRemoveSong = useCallback(async (songId: string) => {
     if (!playlist) return;
 
-    const result = await removeSongFromPlaylistAction(playlist.id, songId);
+    // Find the song_id from the item id
+    const item = songs.find((s) => s.song_id === songId);
+    if (!item) return;
+
+    const result = await removeSongFromPlaylistAction(playlist.id, item.song_id);
     if (result.error) {
       toast.error("Failed to remove song", {
         description: result.error,
@@ -153,39 +149,50 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
       return;
     }
 
-    setSongs((prev) => prev.filter((s) => s.song_id !== songId));
+    setSongs((prev) => prev.filter((s) => s.song_id !== item.song_id));
     toast.success("Song removed from playlist");
-  };
+  }, [playlist, songs]);
 
-  const handleMoveUp = async (index: number) => {
-    if (index === 0 || !playlist) return;
+  const handleReorder = useCallback(async (newSongs: PlaylistSongItem[]) => {
+    if (!playlist) return;
 
-    const newSongs = [...songs];
-    [newSongs[index - 1], newSongs[index]] = [newSongs[index], newSongs[index - 1]];
+    const previousSongs = songs;
     setSongs(newSongs);
 
     const songIds = newSongs.map((s) => s.song_id);
     const result = await reorderSongsAction(playlist.id, songIds);
     if (result.error) {
       toast.error("Failed to reorder songs");
-      setSongs(songs); // Revert
+      setSongs(previousSongs); // Revert
     }
-  };
+  }, [playlist, songs]);
 
-  const handleMoveDown = async (index: number) => {
-    if (index === songs.length - 1 || !playlist) return;
+  const handleSearchSongs = useCallback((query: string): Song[] => {
+    return availableSongs.filter(
+      (song) => !songsInPlaylist.has(song.id) && 
+      (query === "" || song.title.toLowerCase().includes(query.toLowerCase()))
+    ).slice(0, 10);
+  }, [availableSongs, songsInPlaylist]);
 
-    const newSongs = [...songs];
-    [newSongs[index], newSongs[index + 1]] = [newSongs[index + 1], newSongs[index]];
-    setSongs(newSongs);
-
-    const songIds = newSongs.map((s) => s.song_id);
-    const result = await reorderSongsAction(playlist.id, songIds);
-    if (result.error) {
-      toast.error("Failed to reorder songs");
-      setSongs(songs); // Revert
-    }
-  };
+  // Column configuration for songs table
+  const songColumns: ContentColumn<PlaylistSongItem>[] = [
+    {
+      key: "title",
+      header: "Song",
+      render: (item) => (
+        <div>
+          <div className="font-medium text-zinc-900 dark:text-zinc-50">
+            {item.song.title}
+          </div>
+          {item.song.artist_composer && (
+            <div className="text-sm text-zinc-500 dark:text-zinc-400">
+              {item.song.artist_composer}
+            </div>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -270,110 +277,44 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
       {/* Song Management (only for existing playlists) */}
       {playlist && (
         <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Songs ({songs.length})
-            </h2>
-            <button
-              type="button"
-              onClick={() => setShowSongPicker(!showSongPicker)}
-              className="rounded-md bg-black px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
-            >
-              {showSongPicker ? "Cancel" : "Add Song"}
-            </button>
-          </div>
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Songs ({songs.length})
+          </h2>
 
-          {/* Song Picker */}
-          {showSongPicker && (
-            <div className="mb-4 rounded-md border border-zinc-200 p-4 dark:border-zinc-700">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search songs..."
-                className="mb-3 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
-              />
-              <div className="max-h-48 overflow-y-auto">
-                {filteredAvailableSongs.length === 0 ? (
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">No songs available</p>
-                ) : (
-                  <div className="space-y-1">
-                    {filteredAvailableSongs.slice(0, 10).map((song) => (
-                      <button
-                        key={song.id}
-                        type="button"
-                        onClick={() => handleAddSong(song.id)}
-                        className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                      >
-                        <div className="font-medium text-zinc-900 dark:text-zinc-50">{song.title}</div>
-                        {song.artist_composer && (
-                          <div className="text-zinc-600 dark:text-zinc-400">{song.artist_composer}</div>
-                        )}
-                      </button>
-                    ))}
+          <SortableContentTable
+            items={songs}
+            onReorder={handleReorder}
+            onRemove={handleRemoveSong}
+            getItemId={(item) => item.song_id}
+            columns={songColumns}
+            emptyState={{
+              icon: Music,
+              title: "No songs in this playlist",
+              description: "Click \"Add Song\" to get started.",
+            }}
+            picker={{
+              searchPlaceholder: "Search songs...",
+              onSearch: handleSearchSongs,
+              onAdd: handleAddSong,
+              renderResult: (song) => (
+                <div>
+                  <div className="font-medium text-zinc-900 dark:text-zinc-50">
+                    {song.title}
                   </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Songs List */}
-          {songs.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              No songs in this playlist yet. Click "Add Song" to get started.
-            </p>
-          ) : (
-            <div className="divide-y divide-zinc-200 dark:divide-zinc-700">
-              {songs.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-4 py-3"
-                >
-                  <div className="flex flex-col gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleMoveUp(index)}
-                      disabled={index === 0}
-                      className="rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 disabled:opacity-30 dark:hover:bg-zinc-800"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMoveDown(index)}
-                      disabled={index === songs.length - 1}
-                      className="rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 disabled:opacity-30 dark:hover:bg-zinc-800"
-                    >
-                      ↓
-                    </button>
-                  </div>
-                  <div className="w-8 text-center text-sm font-medium text-zinc-500">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-zinc-900 dark:text-zinc-50">
-                      {item.song.title}
+                  {song.artist_composer && (
+                    <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                      {song.artist_composer}
                     </div>
-                    {item.song.artist_composer && (
-                      <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {item.song.artist_composer}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSong(item.song_id)}
-                    className="rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-900 transition-colors hover:bg-red-200 dark:bg-red-900/20 dark:text-red-200 dark:hover:bg-red-900/30"
-                  >
-                    Remove
-                  </button>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
+              ),
+              getItemId: (song) => song.id,
+              buttonLabel: "Add Song",
+            }}
+            disabled={isPending}
+          />
         </div>
       )}
     </div>
   );
 }
-

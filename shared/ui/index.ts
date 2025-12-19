@@ -47,3 +47,13 @@ export {
 // Archive components
 export { ArchiveList, BackLink, ArchiveLink } from "./archive-list";
 
+// Sortable content table
+export {
+  SortableContentTable,
+  SortableRow,
+  ContentPicker,
+  type SortableContentTableProps,
+  type ContentColumn,
+  type ContentPickerConfig,
+} from "./sortable-content-table";
+

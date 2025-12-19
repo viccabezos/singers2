@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowUpIcon,
-  ArrowDownIcon,
-  PlusIcon,
-  XIcon,
-  SearchIcon,
-  ListMusicIcon,
-} from "lucide-react";
+import { ListMusic } from "lucide-react";
 import { toast } from "sonner";
 import type { EventWithPlaylists } from "@/shared/types/event";
+import { SortableContentTable, type ContentColumn, StatusBadge } from "@/shared/ui";
 import { createEventAction } from "./actions";
 import {
   updateEventAction,
@@ -23,6 +17,20 @@ import {
 interface EventFormProps {
   event?: EventWithPlaylists;
 }
+
+type PlaylistItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  position: number;
+};
+
+type SearchPlaylistItem = {
+  id: string;
+  name: string;
+  status: string;
+};
 
 export function EventForm({ event }: EventFormProps) {
   const router = useRouter();
@@ -36,13 +44,7 @@ export function EventForm({ event }: EventFormProps) {
   const [place, setPlace] = useState(event?.place || "");
   const [isVisible, setIsVisible] = useState(event?.is_visible ?? false);
   const [isCurrent, setIsCurrent] = useState(event?.is_current ?? false);
-  const [playlists, setPlaylists] = useState(event?.playlists || []);
-  const [showPlaylistSearch, setShowPlaylistSearch] = useState(false);
-  const [playlistSearch, setPlaylistSearch] = useState("");
-  const [availablePlaylists, setAvailablePlaylists] = useState<
-    { id: string; name: string; status: string }[]
-  >([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [playlists, setPlaylists] = useState<PlaylistItem[]>(event?.playlists || []);
 
   const isEditing = !!event;
 
@@ -83,8 +85,7 @@ export function EventForm({ event }: EventFormProps) {
     });
   };
 
-  const searchPlaylists = async (query: string) => {
-    setIsSearching(true);
+  const handleSearchPlaylists = useCallback(async (query: string): Promise<SearchPlaylistItem[]> => {
     try {
       const { getPlaylists } = await import("@/shared/lib/playlists");
       const results = await getPlaylists({
@@ -93,75 +94,60 @@ export function EventForm({ event }: EventFormProps) {
       });
       // Filter out playlists already in the event
       const existingIds = new Set(playlists.map((p) => p.id));
-      setAvailablePlaylists(
-        results
-          .filter((p) => !existingIds.has(p.id))
-          .map((p) => ({ id: p.id, name: p.name, status: p.status }))
-      );
-    } catch (error) {
+      return results
+        .filter((p) => !existingIds.has(p.id))
+        .map((p) => ({ id: p.id, name: p.name, status: p.status }));
+    } catch {
       toast.error("Failed to search playlists");
-    } finally {
-      setIsSearching(false);
+      return [];
     }
-  };
+  }, [playlists]);
 
-  const handlePlaylistSearchChange = (value: string) => {
-    setPlaylistSearch(value);
-    if (value.length >= 1) {
-      searchPlaylists(value);
-    } else {
-      setAvailablePlaylists([]);
-    }
-  };
-
-  const handleAddPlaylist = async (playlistId: string, playlistName: string, playlistStatus: string) => {
+  const handleAddPlaylist = useCallback(async (playlist: SearchPlaylistItem) => {
     if (!isEditing) {
       // For new events, just add to local state
-      setPlaylists([
-        ...playlists,
+      setPlaylists((prev) => [
+        ...prev,
         {
-          id: playlistId,
-          name: playlistName,
+          id: playlist.id,
+          name: playlist.name,
           description: null,
-          status: playlistStatus,
-          position: playlists.length + 1,
+          status: playlist.status,
+          position: prev.length + 1,
         },
       ]);
-      setAvailablePlaylists(availablePlaylists.filter((p) => p.id !== playlistId));
-      setPlaylistSearch("");
-      setShowPlaylistSearch(false);
       return;
     }
 
     startTransition(async () => {
-      const result = await addPlaylistToEventAction(event.id, playlistId);
+      const result = await addPlaylistToEventAction(event.id, playlist.id);
       if (result.error) {
         toast.error("Failed to add playlist", {
           description: result.error,
         });
       } else {
-        setPlaylists([
-          ...playlists,
+        setPlaylists((prev) => [
+          ...prev,
           {
-            id: playlistId,
-            name: playlistName,
+            id: playlist.id,
+            name: playlist.name,
             description: null,
-            status: playlistStatus,
-            position: playlists.length + 1,
+            status: playlist.status,
+            position: prev.length + 1,
           },
         ]);
-        setAvailablePlaylists(availablePlaylists.filter((p) => p.id !== playlistId));
-        setPlaylistSearch("");
-        setShowPlaylistSearch(false);
-        toast.success(`Added "${playlistName}" to event`);
+        toast.success(`Added "${playlist.name}" to event`);
         router.refresh();
       }
     });
-  };
+  }, [isEditing, event?.id, router]);
 
-  const handleRemovePlaylist = async (playlistId: string, playlistName: string) => {
+  const handleRemovePlaylist = useCallback(async (playlistId: string) => {
+    const playlist = playlists.find((p) => p.id === playlistId);
+    if (!playlist) return;
+
     if (!isEditing) {
-      setPlaylists(playlists.filter((p) => p.id !== playlistId));
+      setPlaylists((prev) => prev.filter((p) => p.id !== playlistId));
       return;
     }
 
@@ -172,42 +158,51 @@ export function EventForm({ event }: EventFormProps) {
           description: result.error,
         });
       } else {
-        setPlaylists(playlists.filter((p) => p.id !== playlistId));
-        toast.success(`Removed "${playlistName}" from event`);
+        setPlaylists((prev) => prev.filter((p) => p.id !== playlistId));
+        toast.success(`Removed "${playlist.name}" from event`);
         router.refresh();
       }
     });
-  };
+  }, [isEditing, event?.id, playlists, router]);
 
-  const handleMovePlaylist = async (index: number, direction: "up" | "down") => {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= playlists.length) return;
-
-    const newPlaylists = [...playlists];
-    [newPlaylists[index], newPlaylists[newIndex]] = [
-      newPlaylists[newIndex],
-      newPlaylists[index],
-    ];
+  const handleReorderPlaylists = useCallback(async (newPlaylists: PlaylistItem[]) => {
+    const previousPlaylists = playlists;
     // Update positions
-    newPlaylists.forEach((p, i) => (p.position = i + 1));
-    setPlaylists(newPlaylists);
+    const updatedPlaylists = newPlaylists.map((p, i) => ({ ...p, position: i + 1 }));
+    setPlaylists(updatedPlaylists);
 
     if (!isEditing) return;
 
     startTransition(async () => {
       const result = await reorderEventPlaylistsAction(
         event.id,
-        newPlaylists.map((p) => p.id)
+        updatedPlaylists.map((p) => p.id)
       );
       if (result.error) {
         toast.error("Failed to reorder playlists", {
           description: result.error,
         });
         // Revert on error
-        setPlaylists(playlists);
+        setPlaylists(previousPlaylists);
       }
     });
-  };
+  }, [isEditing, event?.id, playlists]);
+
+  // Column configuration for playlists table
+  const playlistColumns: ContentColumn<PlaylistItem>[] = [
+    {
+      key: "name",
+      header: "Playlist",
+      render: (item) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-zinc-900 dark:text-zinc-50">
+            {item.name}
+          </span>
+          <StatusBadge variant={item.status as "visible" | "hidden" | "in_progress"} />
+        </div>
+      ),
+    },
+  ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -340,155 +335,38 @@ export function EventForm({ event }: EventFormProps) {
 
       {/* Playlists */}
       <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-medium text-black dark:text-zinc-50">
-            Playlists
-          </h2>
-          <button
-            type="button"
-            onClick={() => {
-              setShowPlaylistSearch(!showPlaylistSearch);
-              if (!showPlaylistSearch) {
-                searchPlaylists("");
-              }
-            }}
-            className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700"
-          >
-            <PlusIcon className="h-4 w-4" />
-            Add Playlist
-          </button>
-        </div>
+        <h2 className="mb-4 text-lg font-medium text-black dark:text-zinc-50">
+          Playlists ({playlists.length})
+        </h2>
 
-        {/* Playlist Search */}
-        {showPlaylistSearch && (
-          <div className="mb-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-            <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search playlists..."
-                value={playlistSearch}
-                onChange={(e) => handlePlaylistSearchChange(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 bg-white py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-400"
-                autoFocus
-              />
-            </div>
-
-            {isSearching && (
-              <p className="mt-2 text-sm text-zinc-500">Searching...</p>
-            )}
-
-            {availablePlaylists.length > 0 && (
-              <ul className="mt-2 max-h-48 overflow-y-auto divide-y divide-zinc-200 dark:divide-zinc-700">
-                {availablePlaylists.map((playlist) => (
-                  <li
-                    key={playlist.id}
-                    className="flex items-center justify-between py-2"
-                  >
-                    <div>
-                      <span className="text-sm text-zinc-900 dark:text-zinc-50">
-                        {playlist.name}
-                      </span>
-                      <span
-                        className={`ml-2 text-xs ${
-                          playlist.status === "visible"
-                            ? "text-green-600 dark:text-green-400"
-                            : playlist.status === "in_progress"
-                            ? "text-blue-600 dark:text-blue-400"
-                            : "text-zinc-500"
-                        }`}
-                      >
-                        {playlist.status}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleAddPlaylist(playlist.id, playlist.name, playlist.status)
-                      }
-                      disabled={isPending}
-                      className="rounded-md bg-black px-2 py-1 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
-                    >
-                      Add
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {playlistSearch && availablePlaylists.length === 0 && !isSearching && (
-              <p className="mt-2 text-sm text-zinc-500">No playlists found</p>
-            )}
-          </div>
-        )}
-
-        {/* Current Playlists */}
-        {playlists.length === 0 ? (
-          <div className="py-8 text-center">
-            <ListMusicIcon className="mx-auto h-12 w-12 text-zinc-400" />
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              No playlists added yet
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
-            {playlists.map((playlist, index) => (
-              <li
-                key={playlist.id}
-                className="flex items-center justify-between py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                      {playlist.name}
-                    </span>
-                    <span
-                      className={`ml-2 text-xs ${
-                        playlist.status === "visible"
-                          ? "text-green-600 dark:text-green-400"
-                          : playlist.status === "in_progress"
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-zinc-500"
-                      }`}
-                    >
-                      {playlist.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleMovePlaylist(index, "up")}
-                    disabled={index === 0 || isPending}
-                    className="rounded p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                  >
-                    <ArrowUpIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMovePlaylist(index, "down")}
-                    disabled={index === playlists.length - 1 || isPending}
-                    className="rounded p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                  >
-                    <ArrowDownIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePlaylist(playlist.id, playlist.name)}
-                    disabled={isPending}
-                    className="rounded p-1 text-red-500 hover:bg-red-100 hover:text-red-700 disabled:opacity-50 dark:hover:bg-red-900 dark:hover:text-red-300"
-                  >
-                    <XIcon className="h-4 w-4" />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <SortableContentTable
+          items={playlists}
+          onReorder={handleReorderPlaylists}
+          onRemove={handleRemovePlaylist}
+          getItemId={(item) => item.id}
+          columns={playlistColumns}
+          emptyState={{
+            icon: ListMusic,
+            title: "No playlists added yet",
+            description: "Click \"Add Playlist\" to get started.",
+          }}
+          picker={{
+            searchPlaceholder: "Search playlists...",
+            onSearch: handleSearchPlaylists,
+            onAdd: handleAddPlaylist,
+            renderResult: (playlist) => (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-zinc-900 dark:text-zinc-50">
+                  {playlist.name}
+                </span>
+                <StatusBadge variant={playlist.status as "visible" | "hidden" | "in_progress"} />
+              </div>
+            ),
+            getItemId: (playlist) => playlist.id,
+            buttonLabel: "Add Playlist",
+          }}
+          disabled={isPending}
+        />
       </div>
 
       {/* Submit */}
@@ -511,4 +389,3 @@ export function EventForm({ event }: EventFormProps) {
     </form>
   );
 }
-
