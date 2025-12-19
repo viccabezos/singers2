@@ -32,7 +32,7 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
   const [filters, setFilters] = useState({
     search: "",
     artist: "",
-    language: "",
+    language: "all",
     visibility: "all",
   });
 
@@ -48,7 +48,7 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
     if (filters.artist) params.set("artist", filters.artist);
-    if (filters.language) params.set("language", filters.language);
+    if (filters.language && filters.language !== "all") params.set("language", filters.language);
     if (filters.visibility !== "all") params.set("visibility", filters.visibility);
     router.push(`/admin/songs?${params.toString()}`);
   };
