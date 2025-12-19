@@ -5,18 +5,19 @@ import { SongsListClient } from "./songs-list-client";
 export default async function SongsPage({
   searchParams,
 }: {
-  searchParams: { search?: string; artist?: string; language?: string; visibility?: string };
+  searchParams: Promise<{ search?: string; artist?: string; language?: string; visibility?: string }>;
 }) {
   await requireAuth();
 
+  const params = await searchParams;
   const filters = {
-    title: searchParams.search,
-    artist_composer: searchParams.artist,
-    language: searchParams.language || undefined,
+    title: params.search,
+    artist_composer: params.artist,
+    language: params.language || undefined,
     is_visible:
-      searchParams.visibility === "visible"
+      params.visibility === "visible"
         ? true
-        : searchParams.visibility === "hidden"
+        : params.visibility === "hidden"
           ? false
           : undefined,
   };
