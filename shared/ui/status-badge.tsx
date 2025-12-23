@@ -38,7 +38,7 @@ const statusConfig: Record<
     className: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200",
   },
   current: {
-    label: "Current",
+    label: "",
     className: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
     icon: StarIcon,
   },
