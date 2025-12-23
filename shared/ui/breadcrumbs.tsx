@@ -1,4 +1,12 @@
 import Link from "next/link";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export interface BreadcrumbItem {
   label: string;
@@ -7,37 +15,30 @@ export interface BreadcrumbItem {
 
 interface BreadcrumbsProps {
   items: BreadcrumbItem[];
+  className?: string;
 }
 
-export function Breadcrumbs({ items }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex flex-wrap items-center gap-1 text-sm">
+    <Breadcrumb className={className}>
+      <BreadcrumbList className="mb-4">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
 
           return (
-            <li key={index} className="flex items-center gap-1">
-              {index > 0 && (
-                <span className="text-zinc-400 dark:text-zinc-600">/</span>
-              )}
+            <BreadcrumbItem key={index}>
+              {index > 0 && <BreadcrumbSeparator />}
               {item.href && !isLast ? (
-                <Link
-                  href={item.href}
-                  className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-                >
-                  {item.label}
-                </Link>
+                <BreadcrumbLink asChild>
+                  <Link href={item.href}>{item.label}</Link>
+                </BreadcrumbLink>
               ) : (
-                <span className="text-zinc-900 dark:text-zinc-50">
-                  {item.label}
-                </span>
+                <BreadcrumbPage>{item.label}</BreadcrumbPage>
               )}
-            </li>
+            </BreadcrumbItem>
           );
         })}
-      </ol>
-    </nav>
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
-

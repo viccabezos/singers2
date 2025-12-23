@@ -45,9 +45,7 @@ export default async function DashboardPage() {
               Welcome to the back office
             </p>
           </div>
-          <Button asChild variant="outline">
-            <Link href="/admin/logout">Logout</Link>
-          </Button>
+         
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

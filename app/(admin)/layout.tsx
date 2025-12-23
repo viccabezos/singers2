@@ -1,8 +1,9 @@
+import { AdminNav } from "@/widgets/admin-nav";
+
 export default function AdminRouteGroupLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <AdminNav>{children}</AdminNav>;
 }
-

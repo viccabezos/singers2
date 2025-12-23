@@ -14,13 +14,11 @@ import {
 import { toast } from "sonner";
 import type { EventWithPlaylistCount } from "@/shared/types/event";
 import {
-  PageHeader,
+  AdminPageLayout,
   DataCardList,
   StatusBadge,
   VisibilityBadge,
-  InlineFilters,
-  SearchInput,
-  FilterSelect,
+  FilterPanel,
   EditButton,
   ArchiveButton,
   ActionButtonGroup,
@@ -36,37 +34,32 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
   const router = useRouter();
   const searchParams = useSearchParams();
   const [events, setEvents] = useState(initialEvents);
-  const [search, setSearch] = useState(searchParams?.get("search") || "");
-  const [visibility, setVisibility] = useState(searchParams?.get("visibility") || "all");
-  const [time, setTime] = useState(searchParams?.get("time") || "all");
+  const [filters, setFilters] = useState({
+    search: searchParams?.get("search") || "",
+    visibility: searchParams?.get("visibility") || "all",
+    time: searchParams?.get("time") || "all",
+  });
 
   useEffect(() => {
     setEvents(initialEvents);
   }, [initialEvents]);
 
-  const updateFilters = (newSearch: string, newVisibility: string, newTime: string) => {
+  const handleFilterChange = (id: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleApplyFilters = () => {
     const params = new URLSearchParams();
-    if (newSearch) params.set("search", newSearch);
-    if (newVisibility !== "all") params.set("visibility", newVisibility);
-    if (newTime !== "all") params.set("time", newTime);
+    if (filters.search) params.set("search", filters.search);
+    if (filters.visibility !== "all") params.set("visibility", filters.visibility);
+    if (filters.time !== "all") params.set("time", filters.time);
     router.push(`/admin/events?${params.toString()}`);
   };
 
-  const handleSearchSubmit = () => {
-    updateFilters(search, visibility, time);
-  };
-
-  const handleVisibilityChange = (value: string) => {
-    setVisibility(value);
-    updateFilters(search, value, time);
-  };
-
-  const handleTimeChange = (value: string) => {
-    setTime(value);
-    updateFilters(search, visibility, value);
-  };
-
   const handleSetCurrent = async (id: string, name: string) => {
+    // Find the previous current event name for the toast
+    const previousCurrent = events.find((e) => e.is_current);
+    
     try {
       const { setCurrentEventAction } = await import("./[id]/actions");
       const result = await setCurrentEventAction(id);
@@ -82,7 +75,16 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
           is_current: event.id === id,
         }))
       );
-      toast.success(`"${name}" is now the current event`);
+      
+      // Show informative toast with previous event info
+      if (previousCurrent) {
+        toast.success(`"${name}" is now the current event`, {
+          description: `Replaced "${previousCurrent.name}" as the current event.`,
+        });
+      } else {
+        toast.success(`"${name}" is now the current event`);
+      }
+      
       router.refresh();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to set current event";
@@ -206,43 +208,55 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
   );
 
   return (
-    <>
-      <PageHeader
-        title="Events"
-        description="Manage your choir events"
-        action={{
-          label: "New Event",
-          href: "/admin/events/new",
-          icon: PlusIcon,
-        }}
+    <AdminPageLayout
+      breadcrumbs={[
+        { label: "Dashboard", href: "/admin/dashboard" },
+        { label: "Events" },
+      ]}
+      title="Events"
+      description="Manage your choir events"
+      action={{
+        label: "New Event",
+        href: "/admin/events/new",
+        icon: PlusIcon,
+      }}
+    >
+      <FilterPanel
+        filters={[
+          {
+            id: "search",
+            type: "search",
+            label: "Search",
+            placeholder: "Search events...",
+            icon: true,
+          },
+          {
+            id: "visibility",
+            type: "select",
+            label: "Visibility",
+            placeholder: "All visibility",
+            options: [
+              { value: "all", label: "All visibility" },
+              { value: "visible", label: "Visible" },
+              { value: "hidden", label: "Hidden" },
+            ],
+          },
+          {
+            id: "time",
+            type: "select",
+            label: "Date",
+            placeholder: "All dates",
+            options: [
+              { value: "all", label: "All dates" },
+              { value: "upcoming", label: "Upcoming" },
+              { value: "past", label: "Past" },
+            ],
+          },
+        ]}
+        values={filters}
+        onChange={handleFilterChange}
+        onApply={handleApplyFilters}
       />
-
-      <InlineFilters>
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          onSubmit={handleSearchSubmit}
-          placeholder="Search events..."
-        />
-        <FilterSelect
-          value={visibility}
-          onChange={handleVisibilityChange}
-          options={[
-            { value: "all", label: "All visibility" },
-            { value: "visible", label: "Visible" },
-            { value: "hidden", label: "Hidden" },
-          ]}
-        />
-        <FilterSelect
-          value={time}
-          onChange={handleTimeChange}
-          options={[
-            { value: "all", label: "All dates" },
-            { value: "upcoming", label: "Upcoming" },
-            { value: "past", label: "Past" },
-          ]}
-        />
-      </InlineFilters>
 
       <DataCardList
         data={events}
@@ -258,14 +272,7 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
         }}
       />
 
-      <div className="mt-6 text-center">
-        <Link
-          href="/admin/events/archive"
-          className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-        >
-          View archived events →
-        </Link>
-      </div>
-    </>
+      <ArchiveLink href="/admin/events/archive" />
+    </AdminPageLayout>
   );
 }

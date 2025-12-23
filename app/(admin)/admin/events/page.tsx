@@ -1,7 +1,6 @@
 import { requireAuth } from "../middleware";
 import { getEvents } from "@/shared/lib/events";
 import { EventsListClient } from "./events-list-client";
-import { Breadcrumbs } from "@/shared/ui/breadcrumbs";
 
 export default async function EventsPage({
   searchParams,
@@ -40,18 +39,5 @@ export default async function EventsPage({
 
   const events = await getEvents(filters);
 
-  return (
-    <div className="min-h-screen bg-zinc-50 p-4 dark:bg-black sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
-        <Breadcrumbs
-          items={[
-            { label: "Dashboard", href: "/admin/dashboard" },
-            { label: "Events", href: "/admin/events" },
-          ]}
-        />
-        <EventsListClient events={events} />
-      </div>
-    </div>
-  );
+  return <EventsListClient events={events} />;
 }
-
