@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { PlusIcon, ListMusicIcon } from "lucide-react";
 import type { PlaylistWithSongCount, PlaylistStatus } from "@/shared/types/playlist";
 import {
@@ -11,8 +10,6 @@ import {
   StatusBadge,
   FilterPanel,
   EditButton,
-  ArchiveButton,
-  ActionButtonGroup,
   ArchiveLink,
   type Column,
 } from "@/shared/ui";
@@ -44,25 +41,6 @@ export function PlaylistsListClient({ playlists: initialPlaylists }: PlaylistsLi
     router.push(`/admin/playlists?${params.toString()}`);
   };
 
-  const handleArchive = async (id: string, name: string) => {
-    try {
-      const { archivePlaylistAction } = await import("./[id]/actions");
-      const result = await archivePlaylistAction(id);
-
-      if (result.error) {
-        toast.error("Failed to archive playlist", { description: result.error });
-        return;
-      }
-
-      setPlaylists((prev) => prev.filter((p) => p.id !== id));
-      toast.success("Playlist archived successfully");
-      router.refresh();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to archive playlist";
-      toast.error("Failed to archive playlist", { description: errorMessage });
-    }
-  };
-
   const columns: Column<PlaylistWithSongCount>[] = [
     {
       key: "name",
@@ -92,20 +70,14 @@ export function PlaylistsListClient({ playlists: initialPlaylists }: PlaylistsLi
       key: "status",
       header: "Status",
       render: (playlist) => (
-        <StatusBadge variant={playlist.status as PlaylistStatus} />
+        <StatusBadge variant={playlist.status as PlaylistStatus} compactOnMobile />
       ),
     },
     {
       key: "actions",
-      header: "Actions",
+      header: "",
       render: (playlist) => (
-        <ActionButtonGroup>
-          <EditButton href={`/admin/playlists/${playlist.id}`} />
-          <ArchiveButton
-            onArchive={() => handleArchive(playlist.id, playlist.name)}
-            itemName={playlist.name}
-          />
-        </ActionButtonGroup>
+        <EditButton href={`/admin/playlists/${playlist.id}`} />
       ),
     },
   ];

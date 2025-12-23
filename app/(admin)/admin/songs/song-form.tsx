@@ -15,7 +15,7 @@ import {
   CheckboxField,
 } from "@/shared/ui";
 import { createSongAction } from "./actions";
-import { updateSongAction, duplicateSongAction } from "./[id]/actions";
+import { updateSongAction } from "./[id]/actions";
 
 interface SongFormProps {
   song?: Song;
@@ -98,30 +98,6 @@ export function SongForm({ song }: SongFormProps) {
     });
   };
 
-  const handleDuplicate = async () => {
-    if (!song) return;
-    if (!confirm("Are you sure you want to duplicate this song?")) return;
-
-    try {
-      const result = await duplicateSongAction(song.id);
-      if (result.error) {
-        toast.error("Failed to duplicate song", {
-          description: result.error,
-        });
-        return;
-      }
-      if (result.song) {
-        toast.success("Song duplicated successfully");
-        router.push(`/admin/songs/${result.song.id}`);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to duplicate song";
-      toast.error("Failed to duplicate song", {
-        description: errorMessage,
-      });
-    }
-  };
-
   return (
     <FormLayout onSubmit={handleSubmit} error={feedback.inlineError}>
       <FormSection>
@@ -194,9 +170,6 @@ export function SongForm({ song }: SongFormProps) {
       <FormActions
         primaryLabel={song ? "Update Song" : "Create Song"}
         onCancel={() => router.back()}
-        extraActions={song ? [
-          { label: "Duplicate", onClick: handleDuplicate, variant: "secondary" }
-        ] : undefined}
         isPending={isPending}
       />
     </FormLayout>

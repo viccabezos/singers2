@@ -209,6 +209,17 @@ export async function bulkUpdateVisibility(
   }
 }
 
+export async function bulkDuplicateSongs(ids: string[]): Promise<Song[]> {
+  const duplicated: Song[] = [];
+  
+  for (const id of ids) {
+    const song = await duplicateSong(id);
+    duplicated.push(song);
+  }
+  
+  return duplicated;
+}
+
 export async function getDistinctLanguages(): Promise<string[]> {
   const { data, error } = await supabase
     .from("songs")

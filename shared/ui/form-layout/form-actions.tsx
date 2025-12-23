@@ -30,7 +30,8 @@ export function FormActions({
   className,
 }: FormActionsProps) {
   return (
-    <div className={cn("flex justify-end gap-4", className)}>
+    // Left-align on mobile (avoid FAB overlap), right-align on desktop
+    <div className={cn("flex justify-start gap-4 md:justify-end", className)}>
       {/* Extra actions (leftmost) */}
       {extraActions?.map((action, index) => (
         <Button

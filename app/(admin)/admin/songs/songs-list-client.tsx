@@ -13,8 +13,6 @@ import {
   VisibilityBadge,
   FilterPanel,
   EditButton,
-  ArchiveButton,
-  ActionButtonGroup,
   ArchiveLink,
   type Column,
 } from "@/shared/ui";
@@ -101,22 +99,24 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
     }
   };
 
-  const handleArchive = async (id: string, title: string) => {
+  const handleBulkDuplicate = async () => {
+    if (selectedIds.size === 0) return;
+
     try {
-      const { archiveSongAction } = await import("./[id]/actions");
-      const result = await archiveSongAction(id);
+      const { bulkDuplicateSongsAction } = await import("./bulk-duplicate/actions");
+      const result = await bulkDuplicateSongsAction(Array.from(selectedIds));
 
       if (result.error) {
-        toast.error("Failed to archive song", { description: result.error });
+        toast.error("Failed to duplicate songs", { description: result.error });
         return;
       }
 
-      setSongs((prev) => prev.filter((song) => song.id !== id));
-      toast.success("Song archived successfully");
+      toast.success(`${result.count} song(s) duplicated`);
+      setSelectedIds(new Set());
       router.refresh();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to archive song";
-      toast.error("Failed to archive song", { description: errorMessage });
+      const errorMessage = error instanceof Error ? error.message : "Failed to duplicate songs";
+      toast.error("Failed to duplicate songs", { description: errorMessage });
     }
   };
 
@@ -158,19 +158,13 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
     {
       key: "visibility",
       header: "Visibility",
-      render: (song) => <VisibilityBadge isVisible={song.is_visible} />,
+      render: (song) => <VisibilityBadge isVisible={song.is_visible} compactOnMobile />,
     },
     {
       key: "actions",
-      header: "Actions",
+      header: "",
       render: (song) => (
-        <ActionButtonGroup>
-          <EditButton href={`/admin/songs/${song.id}`} />
-          <ArchiveButton
-            onArchive={() => handleArchive(song.id, song.title)}
-            itemName={song.title}
-          />
-        </ActionButtonGroup>
+        <EditButton href={`/admin/songs/${song.id}`} />
       ),
     },
   ];
@@ -239,23 +233,32 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
         <Button
           size="sm"
           onClick={() => handleBulkVisibility(true)}
-          className="bg-green-600 hover:bg-green-700 text-white"
+          className="bg-green-600 hover:bg-green-700 text-white shrink-0"
         >
-          Show Selected
+          Show
         </Button>
         <Button
           size="sm"
           onClick={() => handleBulkVisibility(false)}
-          className="bg-orange-600 hover:bg-orange-700 text-white"
+          className="bg-orange-600 hover:bg-orange-700 text-white shrink-0"
         >
-          Hide Selected
+          Hide
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={handleBulkDuplicate}
+          className="shrink-0"
+        >
+          Duplicate
         </Button>
         <Button
           size="sm"
           variant="destructive"
           onClick={handleBulkDelete}
+          className="shrink-0"
         >
-          Archive Selected
+          Archive
         </Button>
       </BulkActionsBar>
 

@@ -9,6 +9,7 @@ import {
   CalendarIcon,
   LogOutIcon,
   MenuIcon,
+  PlusIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -69,6 +70,13 @@ export function AdminNav({ children }: AdminNavProps) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
+  // Don't show navigation on login/logout pages
+  const isAuthPage = pathname === "/admin/login" || pathname === "/admin/logout" || pathname === "/admin";
+  
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
+
   const isActive = (href: string) => {
     if (!pathname) return false;
     if (href === "/admin/dashboard") {
@@ -96,41 +104,74 @@ export function AdminNav({ children }: AdminNavProps) {
             </Button>
           </DrawerTrigger>
           <DrawerContent>
-            <DrawerHeader className="text-left">
-              <DrawerTitle className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <MusicIcon className="h-4 w-4" />
-                </div>
-                Singers Admin
-              </DrawerTitle>
-            </DrawerHeader>
-
-            <nav className="grid gap-1 p-4">
-              {navItems.map((item) => (
-                <DrawerClose key={item.href} asChild>
+            {/* Quick Actions - compact, at the top for easy thumb access */}
+            <div className="px-4 pt-2 pb-3 border-b">
+              <div className="grid grid-cols-3 gap-2">
+                <DrawerClose asChild>
                   <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-3 text-base transition-colors",
-                      isActive(item.href)
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted"
-                    )}
+                    href="/admin/songs/new"
+                    className="flex flex-col items-center gap-1 rounded-lg border p-2 text-center hover:bg-muted transition-colors"
                   >
-                    <item.icon className="h-5 w-5" />
-                    {item.title}
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <MusicIcon className="h-4 w-4" />
+                    </div>
+                    <span className="text-[10px] font-medium">Song</span>
                   </Link>
                 </DrawerClose>
-              ))}
-            </nav>
+                <DrawerClose asChild>
+                  <Link
+                    href="/admin/playlists/new"
+                    className="flex flex-col items-center gap-1 rounded-lg border p-2 text-center hover:bg-muted transition-colors"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <ListMusicIcon className="h-4 w-4" />
+                    </div>
+                    <span className="text-[10px] font-medium">Playlist</span>
+                  </Link>
+                </DrawerClose>
+                <DrawerClose asChild>
+                  <Link
+                    href="/admin/events/new"
+                    className="flex flex-col items-center gap-1 rounded-lg border p-2 text-center hover:bg-muted transition-colors"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <CalendarIcon className="h-4 w-4" />
+                    </div>
+                    <span className="text-[10px] font-medium">Event</span>
+                  </Link>
+                </DrawerClose>
+              </div>
+            </div>
 
-            <div className="border-t p-4">
+            {/* Navigation - compact */}
+            <div className="px-4 py-2">
+              <nav className="grid gap-0.5">
+                {navItems.map((item) => (
+                  <DrawerClose key={item.href} asChild>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                        isActive(item.href)
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.title}
+                    </Link>
+                  </DrawerClose>
+                ))}
+              </nav>
+            </div>
+
+            <div className="border-t px-4 py-2">
               <DrawerClose asChild>
                 <Link
                   href="/admin/logout"
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-base text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 >
-                  <LogOutIcon className="h-5 w-5" />
+                  <LogOutIcon className="h-4 w-4" />
                   Logout
                 </Link>
               </DrawerClose>

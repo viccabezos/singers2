@@ -115,7 +115,10 @@ export function DataTable<T extends { id: string }>({
         </TableHeader>
         <TableBody>
           {data.map((item, index) => (
-            <TableRow key={item.id}>
+            <TableRow 
+              key={item.id}
+              className={index % 2 === 1 ? "bg-zinc-50 dark:bg-zinc-800/50" : ""}
+            >
               {selectable && (
                 <TableCell>
                   <Checkbox
@@ -149,6 +152,7 @@ export function DataTable<T extends { id: string }>({
 }
 
 // Bulk actions bar that appears when items are selected
+// Inline horizontal scrollable bar (under filters/search)
 interface BulkActionsBarProps {
   selectedCount: number;
   onClearSelection: () => void;
@@ -167,19 +171,27 @@ export function BulkActionsBar({
   return (
     <div
       className={cn(
-        "mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800",
+        "mb-4 flex items-center gap-2 rounded-lg bg-zinc-100 p-2 dark:bg-zinc-800 overflow-x-auto",
         className
       )}
     >
-      <span className="text-sm text-zinc-700 dark:text-zinc-300">
+      {/* Mobile: short label */}
+      <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 shrink-0 md:hidden">
+        {selectedCount} sel.
+      </span>
+      {/* Desktop: full label */}
+      <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 shrink-0 hidden md:inline">
         {selectedCount} selected
       </span>
-      {children}
+      <div className="flex items-center gap-2">
+        {children}
+      </div>
       <button
         onClick={onClearSelection}
-        className="rounded-md bg-zinc-600 px-3 py-1 text-sm font-medium text-white hover:bg-zinc-700"
+        className="shrink-0 rounded-md bg-zinc-600 px-2 py-1 text-sm font-medium text-white hover:bg-zinc-700 ml-auto"
       >
-        Clear Selection
+        <span className="md:hidden">Clear</span>
+        <span className="hidden md:inline">Clear Selection</span>
       </button>
     </div>
   );

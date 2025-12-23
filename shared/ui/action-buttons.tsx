@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import Link from "next/link";
+import { PencilIcon, ArchiveIcon, Trash2Icon, RotateCcwIcon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface ActionButtonProps {
@@ -125,6 +126,7 @@ export function ConfirmActionButton({
 }
 
 // Pre-configured action buttons for common use cases
+// These buttons show icon-only on mobile for space efficiency
 
 interface EditButtonProps {
   href: string;
@@ -133,13 +135,29 @@ interface EditButtonProps {
 
 export function EditButton({ href, className }: EditButtonProps) {
   return (
-    <ActionButton
-      label="Edit"
-      href={href}
-      variant="secondary"
-      size="sm"
-      className={className}
-    />
+    <>
+      {/* Mobile: Icon only */}
+      <Button
+        asChild
+        variant="secondary"
+        size="icon"
+        className={cn("h-8 w-8 md:hidden", className)}
+      >
+        <Link href={href}>
+          <PencilIcon className="h-4 w-4" />
+          <span className="sr-only">Edit</span>
+        </Link>
+      </Button>
+      {/* Desktop: Full button */}
+      <Button
+        asChild
+        variant="secondary"
+        size="sm"
+        className={cn("hidden md:inline-flex", className)}
+      >
+        <Link href={href}>Edit</Link>
+      </Button>
+    </>
   );
 }
 
@@ -152,17 +170,43 @@ interface DeleteButtonProps {
 
 export function DeleteButton({ onDelete, itemName, disabled, className }: DeleteButtonProps) {
   return (
-    <ConfirmActionButton
-      label="Delete"
-      onConfirm={onDelete}
-      variant="destructive"
-      size="sm"
-      disabled={disabled}
-      confirmTitle={`Delete "${itemName}"?`}
-      confirmDescription="This action cannot be undone. This will permanently delete this item."
-      confirmLabel="Delete"
-      className={className}
-    />
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <>
+          {/* Mobile: Icon only */}
+          <Button
+            variant="destructive"
+            size="icon"
+            disabled={disabled}
+            className={cn("h-8 w-8 md:hidden", className)}
+          >
+            <Trash2Icon className="h-4 w-4" />
+            <span className="sr-only">Delete</span>
+          </Button>
+          {/* Desktop: Full button */}
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={disabled}
+            className={cn("hidden md:inline-flex", className)}
+          >
+            Delete
+          </Button>
+        </>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete &quot;{itemName}&quot;?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete this item.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -175,17 +219,43 @@ interface ArchiveButtonProps {
 
 export function ArchiveButton({ onArchive, itemName, disabled, className }: ArchiveButtonProps) {
   return (
-    <ConfirmActionButton
-      label="Archive"
-      onConfirm={onArchive}
-      variant="destructive"
-      size="sm"
-      disabled={disabled}
-      confirmTitle={`Archive "${itemName}"?`}
-      confirmDescription="This item will be moved to the archive. You can restore it later."
-      confirmLabel="Archive"
-      className={className}
-    />
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <>
+          {/* Mobile: Icon only */}
+          <Button
+            variant="destructive"
+            size="icon"
+            disabled={disabled}
+            className={cn("h-8 w-8 md:hidden", className)}
+          >
+            <ArchiveIcon className="h-4 w-4" />
+            <span className="sr-only">Archive</span>
+          </Button>
+          {/* Desktop: Full button */}
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={disabled}
+            className={cn("hidden md:inline-flex", className)}
+          >
+            Archive
+          </Button>
+        </>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Archive &quot;{itemName}&quot;?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This item will be moved to the archive. You can restore it later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onArchive}>Archive</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -197,14 +267,29 @@ interface RestoreButtonProps {
 
 export function RestoreButton({ onRestore, disabled, className }: RestoreButtonProps) {
   return (
-    <ActionButton
-      label="Restore"
-      onClick={onRestore}
-      variant="default"
-      size="sm"
-      disabled={disabled}
-      className={cn("bg-green-600 hover:bg-green-700 text-white", className)}
-    />
+    <>
+      {/* Mobile: Icon only */}
+      <Button
+        variant="default"
+        size="icon"
+        onClick={onRestore}
+        disabled={disabled}
+        className={cn("h-8 w-8 bg-green-600 hover:bg-green-700 text-white md:hidden", className)}
+      >
+        <RotateCcwIcon className="h-4 w-4" />
+        <span className="sr-only">Restore</span>
+      </Button>
+      {/* Desktop: Full button */}
+      <Button
+        variant="default"
+        size="sm"
+        onClick={onRestore}
+        disabled={disabled}
+        className={cn("hidden bg-green-600 hover:bg-green-700 text-white md:inline-flex", className)}
+      >
+        Restore
+      </Button>
+    </>
   );
 }
 

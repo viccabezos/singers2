@@ -20,8 +20,6 @@ import {
   VisibilityBadge,
   FilterPanel,
   EditButton,
-  ArchiveButton,
-  ActionButtonGroup,
   ArchiveLink,
 } from "@/shared/ui";
 import { Button } from "@/components/ui/button";
@@ -89,25 +87,6 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to set current event";
       toast.error("Failed to set current event", { description: errorMessage });
-    }
-  };
-
-  const handleArchive = async (id: string, name: string) => {
-    try {
-      const { archiveEventAction } = await import("./[id]/actions");
-      const result = await archiveEventAction(id);
-
-      if (result.error) {
-        toast.error("Failed to archive event", { description: result.error });
-        return;
-      }
-
-      setEvents((prev) => prev.filter((event) => event.id !== id));
-      toast.success(`"${name}" archived successfully`);
-      router.refresh();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to archive event";
-      toast.error("Failed to archive event", { description: errorMessage });
     }
   };
 
@@ -185,7 +164,7 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
         </div>
 
         {/* Actions */}
-        <ActionButtonGroup>
+        <div className="flex items-center gap-2 shrink-0">
           {!event.is_current && (
             <Button
               size="sm"
@@ -194,15 +173,11 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
               className="bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:hover:bg-amber-800"
             >
               <StarIcon className="h-3 w-3" />
-              Set Current
+              <span className="hidden sm:inline">Set Current</span>
             </Button>
           )}
           <EditButton href={`/admin/events/${event.id}`} />
-          <ArchiveButton
-            onArchive={() => handleArchive(event.id, event.name)}
-            itemName={event.name}
-          />
-        </ActionButtonGroup>
+        </div>
       </div>
     </div>
   );
