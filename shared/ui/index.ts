@@ -17,6 +17,14 @@ export {
   CheckboxField,
 } from "./form-field";
 
+// Form layout
+export {
+  FormLayout,
+  FormSection,
+  FormActions,
+  useFormFeedback,
+} from "./form-layout";
+
 // Filter components
 export {
   FilterPanel,

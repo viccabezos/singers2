@@ -3,11 +3,21 @@
 import { useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Music } from "lucide-react";
-import { toast } from "sonner";
 import type { Playlist, PlaylistStatus, PlaylistSong } from "@/shared/types/playlist";
 import type { Song } from "@/shared/types/song";
 import { validatePlaylist } from "@/shared/lib/playlist-validation";
-import { SortableContentTable, type ContentColumn } from "@/shared/ui";
+import {
+  FormLayout,
+  FormSection,
+  FormActions,
+  useFormFeedback,
+  TextField,
+  TextAreaField,
+  SelectField,
+  SortableContentTable,
+  type ContentColumn,
+} from "@/shared/ui";
+import { toast } from "sonner";
 import { createPlaylistAction } from "./actions";
 import { 
   updatePlaylistAction, 
@@ -46,9 +56,16 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
   // Get songs not already in playlist
   const songsInPlaylist = new Set(songs.map((s) => s.song_id));
 
+  const feedback = useFormFeedback({
+    successMessage: playlist ? "Playlist updated successfully" : "Playlist created successfully",
+    successRedirect: playlist ? "/admin/playlists" : undefined, // New playlists redirect to edit page
+    errorMessage: "Failed to save playlist",
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    feedback.clearError();
 
     const validation = validatePlaylist({
       name: formData.name,
@@ -72,19 +89,15 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
         if (playlist) {
           const result = await updatePlaylistAction(playlist.id, playlistData);
           if (result.error) {
-            toast.error("Failed to update playlist", {
-              description: result.error,
-            });
+            feedback.onError(result.error);
             setErrors({ submit: result.error });
             return;
           }
-          toast.success("Playlist updated successfully");
+          feedback.onSuccess();
         } else {
           const result = await createPlaylistAction(playlistData);
           if (result.error) {
-            toast.error("Failed to create playlist", {
-              description: result.error,
-            });
+            feedback.onError(result.error);
             setErrors({ submit: result.error });
             return;
           }
@@ -95,14 +108,9 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
             return;
           }
         }
-
-        router.push("/admin/playlists");
-        router.refresh();
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to save playlist";
-        toast.error("Failed to save playlist", {
-          description: errorMessage,
-        });
+        feedback.onError(errorMessage);
         setErrors({ submit: errorMessage });
       }
     });
@@ -195,92 +203,38 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
   ];
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
-        {/* Name */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-            Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="name"
-            type="text"
-            required
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
-          />
-          {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-        </div>
+    <FormLayout onSubmit={handleSubmit} error={feedback.inlineError}>
+      <FormSection title="Playlist Details">
+        <TextField
+          label="Name"
+          id="name"
+          value={formData.name}
+          onChange={(v) => setFormData({ ...formData, name: v })}
+          required
+          error={errors.name}
+        />
 
-        {/* Description */}
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-            Description
-          </label>
-          <textarea
-            id="description"
-            rows={3}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Optional description for this playlist"
-            className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
-          />
-          {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
-        </div>
+        <TextAreaField
+          label="Description"
+          id="description"
+          value={formData.description}
+          onChange={(v) => setFormData({ ...formData, description: v })}
+          placeholder="Optional description for this playlist"
+          error={errors.description}
+        />
 
-        {/* Status */}
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-            Status
-          </label>
-          <select
-            id="status"
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as PlaylistStatus })}
-            className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Submit Error */}
-        {errors.submit && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
-            {errors.submit}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
-          >
-            {isPending ? "Saving..." : playlist ? "Update Playlist" : "Create Playlist"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+        <SelectField
+          label="Status"
+          id="status"
+          value={formData.status}
+          onChange={(v) => setFormData({ ...formData, status: v as PlaylistStatus })}
+          options={STATUS_OPTIONS}
+        />
+      </FormSection>
 
       {/* Song Management (only for existing playlists) */}
       {playlist && (
-        <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
-          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Songs ({songs.length})
-          </h2>
-
+        <FormSection title={`Songs (${songs.length})`}>
           <SortableContentTable
             items={songs}
             onReorder={handleReorder}
@@ -313,8 +267,14 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
             }}
             disabled={isPending}
           />
-        </div>
+        </FormSection>
       )}
-    </div>
+
+      <FormActions
+        primaryLabel={playlist ? "Update Playlist" : "Create Playlist"}
+        onCancel={() => router.back()}
+        isPending={isPending}
+      />
+    </FormLayout>
   );
 }

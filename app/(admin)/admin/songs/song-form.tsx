@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Song } from "@/shared/types/song";
 import { validateSong } from "@/shared/lib/song-validation";
+import {
+  FormLayout,
+  FormSection,
+  FormActions,
+  useFormFeedback,
+  TextField,
+  TextAreaField,
+  CheckboxField,
+} from "@/shared/ui";
 import { createSongAction } from "./actions";
 import { updateSongAction, duplicateSongAction } from "./[id]/actions";
 
@@ -27,9 +36,16 @@ export function SongForm({ song }: SongFormProps) {
     is_visible: song?.is_visible ?? true,
   });
 
+  const feedback = useFormFeedback({
+    successMessage: song ? "Song updated successfully" : "Song created successfully",
+    successRedirect: "/admin/songs",
+    errorMessage: "Failed to save song",
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    feedback.clearError();
 
     const validation = validateSong({
       title: formData.title,
@@ -61,203 +77,128 @@ export function SongForm({ song }: SongFormProps) {
         if (song) {
           const result = await updateSongAction(song.id, songData);
           if (result.error) {
-            toast.error("Failed to update song", {
-              description: result.error,
-            });
+            feedback.onError(result.error);
             setErrors({ submit: result.error });
             return;
           }
-          toast.success("Song updated successfully");
         } else {
           const result = await createSongAction(songData);
           if (result.error) {
-            toast.error("Failed to create song", {
-              description: result.error,
-            });
+            feedback.onError(result.error);
             setErrors({ submit: result.error });
             return;
           }
-          toast.success("Song created successfully");
         }
-
-        router.push("/admin/songs");
-        router.refresh();
+        feedback.onSuccess();
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to save song";
-        toast.error("Failed to save song", {
-          description: errorMessage,
-        });
+        feedback.onError(errorMessage);
         setErrors({ submit: errorMessage });
       }
     });
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
-      {/* Title */}
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-          Title <span className="text-red-500">*</span>
-        </label>
-        <input
-          id="title"
-          type="text"
-          required
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
-        />
-        {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
-      </div>
+  const handleDuplicate = async () => {
+    if (!song) return;
+    if (!confirm("Are you sure you want to duplicate this song?")) return;
 
-      {/* Lyrics */}
-      <div>
-        <label htmlFor="lyrics" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-          Lyrics <span className="text-red-500">*</span>
-        </label>
-        <textarea
+    try {
+      const result = await duplicateSongAction(song.id);
+      if (result.error) {
+        toast.error("Failed to duplicate song", {
+          description: result.error,
+        });
+        return;
+      }
+      if (result.song) {
+        toast.success("Song duplicated successfully");
+        router.push(`/admin/songs/${result.song.id}`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to duplicate song";
+      toast.error("Failed to duplicate song", {
+        description: errorMessage,
+      });
+    }
+  };
+
+  return (
+    <FormLayout onSubmit={handleSubmit} error={feedback.inlineError}>
+      <FormSection>
+        {/* Title */}
+        <TextField
+          label="Title"
+          id="title"
+          value={formData.title}
+          onChange={(v) => setFormData({ ...formData, title: v })}
+          required
+          error={errors.title}
+        />
+
+        {/* Lyrics */}
+        <TextAreaField
+          label="Lyrics"
           id="lyrics"
+          value={formData.lyrics}
+          onChange={(v) => setFormData({ ...formData, lyrics: v })}
           required
           rows={20}
-          value={formData.lyrics}
-          onChange={(e) => setFormData({ ...formData, lyrics: e.target.value })}
           placeholder="Paste lyrics here. Line breaks will be preserved."
-          className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-1 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
+          error={errors.lyrics}
         />
-        {errors.lyrics && <p className="mt-1 text-sm text-red-600">{errors.lyrics}</p>}
-      </div>
 
-      {/* Optional Fields Grid */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Artist/Composer */}
-        <div>
-          <label htmlFor="artist_composer" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-            Artist/Composer
-          </label>
-          <input
+        {/* Optional Fields Grid */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextField
+            label="Artist/Composer"
             id="artist_composer"
-            type="text"
             value={formData.artist_composer}
-            onChange={(e) => setFormData({ ...formData, artist_composer: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
+            onChange={(v) => setFormData({ ...formData, artist_composer: v })}
           />
-        </div>
 
-        {/* Language */}
-        <div>
-          <label htmlFor="language" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-            Language
-          </label>
-          <input
+          <TextField
+            label="Language"
             id="language"
-            type="text"
             value={formData.language}
-            onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+            onChange={(v) => setFormData({ ...formData, language: v })}
             placeholder="e.g., English, French"
-            className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
           />
-        </div>
 
-        {/* Genre */}
-        <div>
-          <label htmlFor="genre" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-            Genre
-          </label>
-          <input
+          <TextField
+            label="Genre"
             id="genre"
-            type="text"
             value={formData.genre}
-            onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
+            onChange={(v) => setFormData({ ...formData, genre: v })}
           />
-        </div>
 
-        {/* Year */}
-        <div>
-          <label htmlFor="year" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-            Year
-          </label>
-          <input
+          <TextField
+            label="Year"
             id="year"
             type="number"
             value={formData.year}
-            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+            onChange={(v) => setFormData({ ...formData, year: v })}
             placeholder="e.g., 2020"
-            className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
+            error={errors.year}
           />
-          {errors.year && <p className="mt-1 text-sm text-red-600">{errors.year}</p>}
         </div>
-      </div>
 
-      {/* Visibility */}
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
+        {/* Visibility */}
+        <CheckboxField
+          label="Visible on public website"
           id="is_visible"
           checked={formData.is_visible}
-          onChange={(e) => setFormData({ ...formData, is_visible: e.target.checked })}
-          className="h-4 w-4 rounded border-zinc-300"
+          onChange={(v) => setFormData({ ...formData, is_visible: v })}
         />
-        <label htmlFor="is_visible" className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-          Visible on public website
-        </label>
-      </div>
+      </FormSection>
 
-      {/* Submit Error */}
-      {errors.submit && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
-          {errors.submit}
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex gap-4">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
-        >
-          {isPending ? "Saving..." : song ? "Update Song" : "Create Song"}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700"
-        >
-          Cancel
-        </button>
-        {song && (
-          <button
-            type="button"
-            onClick={async () => {
-              if (confirm("Are you sure you want to duplicate this song?")) {
-                try {
-                  const result = await duplicateSongAction(song.id);
-                  if (result.error) {
-                    toast.error("Failed to duplicate song", {
-                      description: result.error,
-                    });
-                    return;
-                  }
-                  if (result.song) {
-                    toast.success("Song duplicated successfully");
-                    router.push(`/admin/songs/${result.song.id}`);
-                  }
-                } catch (error) {
-                  const errorMessage = error instanceof Error ? error.message : "Failed to duplicate song";
-                  toast.error("Failed to duplicate song", {
-                    description: errorMessage,
-                  });
-                }
-              }
-            }}
-            className="rounded-md bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700"
-          >
-            Duplicate
-          </button>
-        )}
-      </div>
-    </form>
+      <FormActions
+        primaryLabel={song ? "Update Song" : "Create Song"}
+        onCancel={() => router.back()}
+        extraActions={song ? [
+          { label: "Duplicate", onClick: handleDuplicate, variant: "secondary" }
+        ] : undefined}
+        isPending={isPending}
+      />
+    </FormLayout>
   );
 }
-

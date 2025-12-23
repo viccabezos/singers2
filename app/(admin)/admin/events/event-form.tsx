@@ -5,7 +5,18 @@ import { useRouter } from "next/navigation";
 import { ListMusic } from "lucide-react";
 import { toast } from "sonner";
 import type { EventWithPlaylists } from "@/shared/types/event";
-import { SortableContentTable, type ContentColumn, StatusBadge } from "@/shared/ui";
+import {
+  FormLayout,
+  FormSection,
+  FormActions,
+  useFormFeedback,
+  TextField,
+  TextAreaField,
+  CheckboxField,
+  SortableContentTable,
+  StatusBadge,
+  type ContentColumn,
+} from "@/shared/ui";
 import { createEventAction } from "./actions";
 import {
   updateEventAction,
@@ -35,52 +46,58 @@ type SearchPlaylistItem = {
 export function EventForm({ event }: EventFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [name, setName] = useState(event?.name || "");
-  const [description, setDescription] = useState(event?.description || "");
-  const [eventDate, setEventDate] = useState(event?.event_date || "");
-  const [eventTime, setEventTime] = useState(
-    event?.event_time ? event.event_time.substring(0, 5) : ""
-  );
-  const [place, setPlace] = useState(event?.place || "");
-  const [isVisible, setIsVisible] = useState(event?.is_visible ?? false);
-  const [isCurrent, setIsCurrent] = useState(event?.is_current ?? false);
+  const [formData, setFormData] = useState({
+    name: event?.name || "",
+    description: event?.description || "",
+    eventDate: event?.event_date || "",
+    eventTime: event?.event_time ? event.event_time.substring(0, 5) : "",
+    place: event?.place || "",
+    isVisible: event?.is_visible ?? false,
+    isCurrent: event?.is_current ?? false,
+  });
   const [playlists, setPlaylists] = useState<PlaylistItem[]>(event?.playlists || []);
 
   const isEditing = !!event;
 
+  const feedback = useFormFeedback({
+    successMessage: isEditing ? "Event updated successfully" : "Event created successfully",
+    successRedirect: "/admin/events",
+    errorMessage: "Failed to save event",
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    feedback.clearError();
 
     const input = {
-      name: name.trim(),
-      description: description.trim() || null,
-      event_date: eventDate,
-      event_time: eventTime ? `${eventTime}:00` : null,
-      place: place.trim() || null,
-      is_visible: isVisible,
-      is_current: isCurrent,
+      name: formData.name.trim(),
+      description: formData.description.trim() || null,
+      event_date: formData.eventDate,
+      event_time: formData.eventTime ? `${formData.eventTime}:00` : null,
+      place: formData.place.trim() || null,
+      is_visible: formData.isVisible,
+      is_current: formData.isCurrent,
     };
 
     startTransition(async () => {
-      if (isEditing) {
-        const result = await updateEventAction(event.id, input);
-        if (result.error) {
-          toast.error("Failed to update event", {
-            description: result.error,
-          });
+      try {
+        if (isEditing) {
+          const result = await updateEventAction(event.id, input);
+          if (result.error) {
+            feedback.onError(result.error);
+            return;
+          }
         } else {
-          toast.success("Event updated successfully");
-          router.refresh();
+          const result = await createEventAction(input);
+          if (result?.error) {
+            feedback.onError(result.error);
+            return;
+          }
         }
-      } else {
-        const result = await createEventAction(input);
-        if (result?.error) {
-          toast.error("Failed to create event", {
-            description: result.error,
-          });
-        } else {
-          toast.success("Event created successfully");
-        }
+        feedback.onSuccess();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to save event";
+        feedback.onError(errorMessage);
       }
     });
   };
@@ -205,140 +222,73 @@ export function EventForm({ event }: EventFormProps) {
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Basic Info */}
-      <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
-        <h2 className="mb-4 text-lg font-medium text-black dark:text-zinc-50">
-          Event Details
-        </h2>
+    <FormLayout onSubmit={handleSubmit} error={feedback.inlineError}>
+      <FormSection title="Event Details">
+        <TextField
+          label="Name"
+          id="name"
+          value={formData.name}
+          onChange={(v) => setFormData({ ...formData, name: v })}
+          required
+          placeholder="Concert de Noël"
+        />
 
-        <div className="space-y-4">
-          {/* Name */}
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-400"
-              placeholder="Concert de Noël"
-            />
-          </div>
+        <TextAreaField
+          label="Description"
+          id="description"
+          value={formData.description}
+          onChange={(v) => setFormData({ ...formData, description: v })}
+          placeholder="Optional description..."
+        />
 
-          {/* Description */}
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-400"
-              placeholder="Optional description..."
-            />
-          </div>
+        {/* Date and Time */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <TextField
+            label="Date"
+            id="event_date"
+            type="date"
+            value={formData.eventDate}
+            onChange={(v) => setFormData({ ...formData, eventDate: v })}
+            required
+          />
 
-          {/* Date and Time */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor="event_date"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                id="event_date"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-                required
-                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="event_time"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Time
-              </label>
-              <input
-                type="time"
-                id="event_time"
-                value={eventTime}
-                onChange={(e) => setEventTime(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-              />
-            </div>
-          </div>
-
-          {/* Place */}
-          <div>
-            <label
-              htmlFor="place"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              Place
-            </label>
-            <input
-              type="text"
-              id="place"
-              value={place}
-              onChange={(e) => setPlace(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-400"
-              placeholder="Église Saint-Pierre"
-            />
-          </div>
-
-          {/* Visibility and Current */}
-          <div className="flex flex-wrap gap-6">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={isVisible}
-                onChange={(e) => setIsVisible(e.target.checked)}
-                className="h-4 w-4 rounded border-zinc-300 text-black focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800"
-              />
-              <span className="text-sm text-zinc-700 dark:text-zinc-300">
-                Visible on public site
-              </span>
-            </label>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={isCurrent}
-                onChange={(e) => setIsCurrent(e.target.checked)}
-                className="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500 dark:border-zinc-700 dark:bg-zinc-800"
-              />
-              <span className="text-sm text-zinc-700 dark:text-zinc-300">
-                Set as current event
-              </span>
-            </label>
-          </div>
+          <TextField
+            label="Time"
+            id="event_time"
+            type="time"
+            value={formData.eventTime}
+            onChange={(v) => setFormData({ ...formData, eventTime: v })}
+          />
         </div>
-      </div>
+
+        <TextField
+          label="Place"
+          id="place"
+          value={formData.place}
+          onChange={(v) => setFormData({ ...formData, place: v })}
+          placeholder="Église Saint-Pierre"
+        />
+
+        {/* Visibility and Current */}
+        <div className="flex flex-wrap gap-6">
+          <CheckboxField
+            label="Visible on public site"
+            id="is_visible"
+            checked={formData.isVisible}
+            onChange={(v) => setFormData({ ...formData, isVisible: v })}
+          />
+
+          <CheckboxField
+            label="Set as current event"
+            id="is_current"
+            checked={formData.isCurrent}
+            onChange={(v) => setFormData({ ...formData, isCurrent: v })}
+          />
+        </div>
+      </FormSection>
 
       {/* Playlists */}
-      <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
-        <h2 className="mb-4 text-lg font-medium text-black dark:text-zinc-50">
-          Playlists ({playlists.length})
-        </h2>
-
+      <FormSection title={`Playlists (${playlists.length})`}>
         <SortableContentTable
           items={playlists}
           onReorder={handleReorderPlaylists}
@@ -367,25 +317,13 @@ export function EventForm({ event }: EventFormProps) {
           }}
           disabled={isPending}
         />
-      </div>
+      </FormSection>
 
-      {/* Submit */}
-      <div className="flex justify-end gap-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
-        >
-          {isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Event"}
-        </button>
-      </div>
-    </form>
+      <FormActions
+        primaryLabel={isEditing ? "Save Changes" : "Create Event"}
+        onCancel={() => router.back()}
+        isPending={isPending}
+      />
+    </FormLayout>
   );
 }
