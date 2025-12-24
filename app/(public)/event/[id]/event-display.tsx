@@ -9,6 +9,7 @@ import {
   ChevronRightIcon,
 } from "lucide-react";
 import type { Event } from "@/shared/types/event";
+import { MapWithPlaceholder } from "@/shared/ui";
 
 interface EventDisplayProps {
   event: Event;
@@ -83,6 +84,34 @@ export function EventDisplay({ event, playlists }: EventDisplayProps) {
             </p>
           )}
         </div>
+
+        {/* Map - only show if we have place info */}
+        {event.place && (
+          <section className="mb-8">
+            <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-black dark:text-zinc-50">
+              <MapPinIcon className="h-5 w-5" />
+              Location
+            </h2>
+            <MapWithPlaceholder
+              location={
+                event.latitude && event.longitude
+                  ? {
+                      latitude: event.latitude,
+                      longitude: event.longitude,
+                      address: event.place,
+                    }
+                  : null
+              }
+              height="250px"
+              placeholderText={event.place}
+            />
+            {event.place && (
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                {event.place}
+              </p>
+            )}
+          </section>
+        )}
 
         {/* Playlists */}
         <section>

@@ -17,6 +17,19 @@ export {
   CheckboxField,
 } from "./form-field";
 
+export {
+  PlaceAutocompleteField,
+  type PlaceResult,
+} from "./place-autocomplete-field";
+
+// Google Maps
+export {
+  GoogleMapDisplay,
+  MapWithPlaceholder,
+  LocationPickerMap,
+  type MapLocation,
+} from "./google-map";
+
 // Form layout
 export {
   FormLayout,

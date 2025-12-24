@@ -15,7 +15,11 @@ import {
   CheckboxField,
   SortableContentTable,
   StatusBadge,
+  PlaceAutocompleteField,
+  LocationPickerMap,
   type ContentColumn,
+  type PlaceResult,
+  type MapLocation,
 } from "@/shared/ui";
 import { createEventAction } from "./actions";
 import {
@@ -52,6 +56,8 @@ export function EventForm({ event }: EventFormProps) {
     eventDate: event?.event_date || "",
     eventTime: event?.event_time ? event.event_time.substring(0, 5) : "",
     place: event?.place || "",
+    latitude: event?.latitude ?? null,
+    longitude: event?.longitude ?? null,
     isVisible: event?.is_visible ?? false,
     isCurrent: event?.is_current ?? false,
   });
@@ -75,6 +81,8 @@ export function EventForm({ event }: EventFormProps) {
       event_date: formData.eventDate,
       event_time: formData.eventTime ? `${formData.eventTime}:00` : null,
       place: formData.place.trim() || null,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
       is_visible: formData.isVisible,
       is_current: formData.isCurrent,
     };
@@ -261,12 +269,37 @@ export function EventForm({ event }: EventFormProps) {
           />
         </div>
 
-        <TextField
+        <PlaceAutocompleteField
           label="Place"
           id="place"
           value={formData.place}
-          onChange={(v) => setFormData({ ...formData, place: v })}
-          placeholder="Église Saint-Pierre"
+          onChange={(result: PlaceResult) => setFormData({ 
+            ...formData, 
+            place: result.address,
+            latitude: result.latitude,
+            longitude: result.longitude,
+          })}
+          placeholder="Église Saint-Pierre, Paris"
+        />
+
+        {/* Interactive map - always visible, click to set location */}
+        <LocationPickerMap
+          location={
+            formData.latitude && formData.longitude
+              ? {
+                  latitude: formData.latitude,
+                  longitude: formData.longitude,
+                  address: formData.place,
+                }
+              : null
+          }
+          onLocationChange={(loc: MapLocation) => setFormData({
+            ...formData,
+            place: loc.address || formData.place,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+          })}
+          height="250px"
         />
 
         {/* Visibility and Current */}

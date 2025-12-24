@@ -54,19 +54,22 @@
 ## Future Tasks (Tomorrow)
 
 ### 9. Sidebar state persistence
-- **Status**: 🔲 Open
+- **Status**: ✅ Fixed
 - **Part**: Desktop sidebar
-- **Description**: Store the sidebar open/close state in browser localStorage so it persists across page navigations and sessions. Currently resets to open every time.
+- **Description**: The sidebar open/close state now persists across page navigations and sessions via cookies. The shadcn SidebarProvider already writes to cookies on toggle; we now read the cookie server-side in the admin layout and pass it as `defaultSidebarOpen` prop.
 
 ### 10. Google Maps integration for event address
-- **Status**: 🔲 Open  
-- **Page**: Events form + Events list
-- **Description**: Research how to integrate Google Maps for event addresses. Questions to answer:
-  - Should we use Google Places Autocomplete for address input?
-  - Store coordinates (lat/lng) in DB for easier map display later?
-  - What's needed for the public site to show a map with the event location?
-  - Consider: address field → autocomplete → store address + coordinates
-- **Note**: Better to set this up now in admin to make public site integration easier later
+- **Status**: ✅ Fixed  
+- **Page**: Events form + Public event page
+- **Description**: Full Google Maps integration:
+  - Added `latitude` and `longitude` columns to events table (migration)
+  - Created `PlaceAutocompleteField` component with Google Places Autocomplete
+  - Created `GoogleMapDisplay` and `MapWithPlaceholder` components for map display
+  - **Admin form**: Place autocomplete + map preview when coordinates set
+  - **Public event page**: Shows map with marker when coordinates available
+  - Restricted autocomplete to France for better local results
+  - Graceful fallback when API key not configured or coordinates not set
+- **Setup required**: Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to `.env.local` (Places API enabled)
 
 ### 11. AI Song Assistant
 - **Status**: 🔲 Open

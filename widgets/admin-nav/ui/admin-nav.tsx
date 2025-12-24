@@ -64,9 +64,10 @@ const navItems = [
 
 interface AdminNavProps {
   children: React.ReactNode;
+  defaultSidebarOpen?: boolean;
 }
 
-export function AdminNav({ children }: AdminNavProps) {
+export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
@@ -184,7 +185,7 @@ export function AdminNav({ children }: AdminNavProps) {
 
   // Desktop/Tablet: Collapsible sidebar with trigger button
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultSidebarOpen}>
       <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader className="border-b border-sidebar-border">
           <div className="flex items-center gap-2 px-2 py-2">

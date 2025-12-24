@@ -5,6 +5,8 @@ export interface Event {
   event_date: string; // DATE stored as ISO string (YYYY-MM-DD)
   event_time: string | null; // TIME stored as HH:MM:SS
   place: string | null;
+  latitude: number | null; // GPS latitude for map display
+  longitude: number | null; // GPS longitude for map display
   is_visible: boolean;
   is_current: boolean;
   is_archived: boolean;
@@ -40,6 +42,8 @@ export type CreateEventInput = {
   event_date: string;
   event_time?: string | null;
   place?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   is_visible?: boolean;
   is_current?: boolean;
 };

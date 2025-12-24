@@ -162,6 +162,8 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
       event_date: input.event_date,
       event_time: input.event_time || null,
       place: input.place || null,
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
       is_visible: input.is_visible ?? false,
       is_current: input.is_current ?? false,
     })
