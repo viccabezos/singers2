@@ -166,7 +166,6 @@ export const GoogleMapDisplay = memo(function GoogleMapDisplay({
         zoom={mapZoom}
         options={{
           ...mapOptions,
-          cursor: onMapClick ? "crosshair" : undefined,
         }}
         onLoad={onLoad}
         onUnmount={onUnmount}

@@ -23,7 +23,7 @@ import {
   ArchiveLink,
 } from "@/shared/ui";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatEventDate, formatEventTime } from "@/lib/utils";
 
 interface EventsListClientProps {
   events: EventWithPlaylistCount[];
@@ -92,19 +92,7 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
-  };
 
-  const formatTime = (timeStr: string | null) => {
-    if (!timeStr) return null;
-    return timeStr.substring(0, 5);
-  };
 
   const isPastEvent = (dateStr: string) => {
     const eventDate = new Date(dateStr);
@@ -316,7 +304,7 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
                     {event.event_time && (
                       <span className="inline-flex items-center gap-1">
                         <ClockIcon className="h-3 w-3" />
-                        {formatTime(event.event_time)}
+                        {formatEventTime(event.event_time)}
                       </span>
                     )}
                     {event.place && (

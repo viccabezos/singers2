@@ -12,6 +12,7 @@ import {
   ArchiveList,
   BackLink,
 } from "@/shared/ui";
+import { formatEventDate, formatEventTime } from "@/lib/utils";
 
 interface ArchiveListClientProps {
   events: EventWithPlaylistCount[];
@@ -87,12 +88,12 @@ export function ArchiveListClient({ events: initialEvents }: ArchiveListClientPr
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
               <span className="inline-flex items-center gap-1">
                 <CalendarIcon className="h-4 w-4" />
-                {formatDate(event.event_date)}
+                {formatEventDate(event.event_date, "full")}
               </span>
               {event.event_time && (
                 <span className="inline-flex items-center gap-1">
                   <ClockIcon className="h-4 w-4" />
-                  {formatTime(event.event_time)}
+                  {formatEventTime(event.event_time)}
                 </span>
               )}
               {event.place && (

@@ -1,10 +1,7 @@
 ---
-name: feature-slice-design
 description: Feature Slice Design (FSD) architecture for web applications. Use this when creating new features, organizing code, or refactoring existing modules.
-globs: **/*.ts, **/*.tsx
 alwaysApply: false
 ---
-
 # Feature Slice Design (FSD) Architecture
 
 This project follows **Feature Slice Design** for organizing frontend code. FSD provides a standardized, scalable architecture that keeps features isolated, dependencies explicit, and codebase navigable.

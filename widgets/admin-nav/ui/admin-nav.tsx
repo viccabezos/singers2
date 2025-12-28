@@ -116,7 +116,7 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <MusicIcon className="h-4 w-4" />
                     </div>
-                    <span className="text-[10px] font-medium">Song</span>
+                    <span className="text-[10px] font-medium">New Song</span>
                   </Link>
                 </DrawerClose>
                 <DrawerClose asChild>
@@ -127,7 +127,7 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <ListMusicIcon className="h-4 w-4" />
                     </div>
-                    <span className="text-[10px] font-medium">Playlist</span>
+                    <span className="text-[10px] font-medium">New Playlist</span>
                   </Link>
                 </DrawerClose>
                 <DrawerClose asChild>
@@ -138,7 +138,7 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <CalendarIcon className="h-4 w-4" />
                     </div>
-                    <span className="text-[10px] font-medium">Event</span>
+                    <span className="text-[10px] font-medium">New Event</span>
                   </Link>
                 </DrawerClose>
               </div>
@@ -223,6 +223,41 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border">
+          {/* Quick Actions */}
+          <SidebarGroup className="py-2">
+            <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="New Song">
+                    <Link href="/admin/songs/new">
+                      <MusicIcon className="h-4 w-4" />
+                      <span>New Song</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="New Playlist">
+                    <Link href="/admin/playlists/new">
+                      <ListMusicIcon className="h-4 w-4" />
+                      <span>New Playlist</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="New Event">
+                    <Link href="/admin/events/new">
+                      <CalendarIcon className="h-4 w-4" />
+                      <span>New Event</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* Logout */}
+          <div className="border-t border-sidebar-border pt-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Logout">
@@ -233,6 +268,7 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+          </div>
         </SidebarFooter>
 
         <SidebarRail />

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { Event } from "@/shared/types/event";
 import { MapWithPlaceholder } from "@/shared/ui";
+import { formatEventDate, formatEventTime } from "@/lib/utils";
 
 interface EventDisplayProps {
   event: Event;
@@ -22,21 +23,6 @@ interface EventDisplayProps {
 }
 
 export function EventDisplay({ event, playlists }: EventDisplayProps) {
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (timeStr: string | null) => {
-    if (!timeStr) return null;
-    return timeStr.substring(0, 5);
-  };
-
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
       {/* Header */}
@@ -62,12 +48,12 @@ export function EventDisplay({ event, playlists }: EventDisplayProps) {
           <div className="mt-4 flex flex-wrap items-center gap-4 text-zinc-600 dark:text-zinc-400">
             <span className="inline-flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
-              {formatDate(event.event_date)}
+              {formatEventDate(event.event_date, "full")}
             </span>
             {event.event_time && (
               <span className="inline-flex items-center gap-2">
                 <ClockIcon className="h-5 w-5" />
-                {formatTime(event.event_time)}
+                {formatEventTime(event.event_time)}
               </span>
             )}
             {event.place && (

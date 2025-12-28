@@ -7,10 +7,14 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { getEvents } from "@/shared/lib/events";
+import { EventCalendar } from "@/widgets/event-calendar";
 
 export default async function DashboardPage() {
   await requireAuth();
+
+  // Fetch all visible (non-archived) events for the calendar
+  const events = await getEvents({ is_archived: false });
 
   const navItems = [
     {
@@ -68,6 +72,10 @@ export default async function DashboardPage() {
               </Card>
             </Link>
           ))}
+        </div>
+
+        <div className="mt-8">
+          <EventCalendar events={events} />
         </div>
       </div>
     </div>
