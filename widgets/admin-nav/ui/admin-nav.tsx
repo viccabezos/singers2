@@ -26,12 +26,12 @@ import {
   SidebarInset,
   SidebarTrigger,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Drawer,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
+
   DrawerTrigger,
   DrawerClose,
 } from "@/components/ui/drawer";
@@ -62,9 +62,42 @@ const navItems = [
   },
 ];
 
+const quickActions = [
+  {
+    title: "New Song",
+    href: "/admin/songs/new",
+    icon: MusicIcon,
+  },
+  {
+    title: "New Playlist",
+    href: "/admin/playlists/new",
+    icon: ListMusicIcon,
+  },
+  {
+    title: "New Event",
+    href: "/admin/events/new",
+    icon: CalendarIcon,
+  },
+];
+
 interface AdminNavProps {
   children: React.ReactNode;
   defaultSidebarOpen?: boolean;
+}
+
+function AdminHeader() {
+  const { state } = useSidebar();
+  
+  // Only show header trigger when sidebar is expanded
+  if (state === "collapsed") {
+    return null;
+  }
+
+  return (
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+      <SidebarTrigger className="-ml-1" />
+    </header>
+  );
 }
 
 export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps) {
@@ -108,39 +141,19 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
             {/* Quick Actions - compact, at the top for easy thumb access */}
             <div className="px-4 pt-2 pb-3 border-b">
               <div className="grid grid-cols-3 gap-2">
-                <DrawerClose asChild>
-                  <Link
-                    href="/admin/songs/new"
-                    className="flex flex-col items-center gap-1 rounded-lg border p-2 text-center hover:bg-muted transition-colors"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <MusicIcon className="h-4 w-4" />
-                    </div>
-                    <span className="text-[10px] font-medium">New Song</span>
-                  </Link>
-                </DrawerClose>
-                <DrawerClose asChild>
-                  <Link
-                    href="/admin/playlists/new"
-                    className="flex flex-col items-center gap-1 rounded-lg border p-2 text-center hover:bg-muted transition-colors"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <ListMusicIcon className="h-4 w-4" />
-                    </div>
-                    <span className="text-[10px] font-medium">New Playlist</span>
-                  </Link>
-                </DrawerClose>
-                <DrawerClose asChild>
-                  <Link
-                    href="/admin/events/new"
-                    className="flex flex-col items-center gap-1 rounded-lg border p-2 text-center hover:bg-muted transition-colors"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <CalendarIcon className="h-4 w-4" />
-                    </div>
-                    <span className="text-[10px] font-medium">New Event</span>
-                  </Link>
-                </DrawerClose>
+                {quickActions.map((action) => (
+                  <DrawerClose key={action.href} asChild>
+                    <Link
+                      href={action.href}
+                      className="flex flex-col items-center gap-1 rounded-lg border p-2 text-center hover:bg-muted transition-colors"
+                    >
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <action.icon className="h-4 w-4" />
+                      </div>
+                      <span className="text-[10px] font-medium">{action.title}</span>
+                    </Link>
+                  </DrawerClose>
+                ))}
               </div>
             </div>
 
@@ -188,10 +201,14 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
     <SidebarProvider defaultOpen={defaultSidebarOpen}>
       <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader className="border-b border-sidebar-border">
-          <div className="flex items-center gap-2 px-2 py-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex items-center gap-2  py-2">
+            {/* Music icon - visible when expanded */}
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground group-data-[collapsible=icon]:hidden">
               <MusicIcon className="h-4 w-4" />
             </div>
+            {/* Sidebar trigger - visible when collapsed */}
+            
+            <SidebarTrigger className="hidden h-8 w-8 group-data-[collapsible=icon]:flex" />
             <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
               Singers Admin
             </span>
@@ -211,6 +228,7 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
                       tooltip={item.title}
                     >
                       <Link href={item.href}>
+                    
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>
@@ -224,38 +242,26 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
 
         <SidebarFooter className="border-t border-sidebar-border">
           {/* Quick Actions */}
-          <SidebarGroup className="py-2">
+       
             <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="New Song">
-                    <Link href="/admin/songs/new">
-                      <MusicIcon className="h-4 w-4" />
-                      <span>New Song</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="New Playlist">
-                    <Link href="/admin/playlists/new">
-                      <ListMusicIcon className="h-4 w-4" />
-                      <span>New Playlist</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="New Event">
-                    <Link href="/admin/events/new">
-                      <CalendarIcon className="h-4 w-4" />
-                      <span>New Event</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {quickActions.map((action) => (
+                  <SidebarMenuItem key={action.href}>
+                    <SidebarMenuButton asChild tooltip={action.title}>
+                      <Link href={action.href}>
+                      <div>
+                        <PlusIcon className="h-2 w-2" />
+                        <action.icon className="h-4 w-4" />
+                      </div>
+                        <span>{action.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
-          </SidebarGroup>
-
+         
           {/* Logout */}
           <div className="border-t border-sidebar-border pt-2">
           <SidebarMenu>
@@ -275,10 +281,7 @@ export function AdminNav({ children, defaultSidebarOpen = true }: AdminNavProps)
       </Sidebar>
 
       <SidebarInset>
-        {/* Desktop header with sidebar toggle */}
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 ">
-          <SidebarTrigger className="-ml-1" />
-        </header>
+        <AdminHeader />
         
         {/* Page content */}
         <div className="flex-1">
