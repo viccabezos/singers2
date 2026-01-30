@@ -237,3 +237,42 @@ export async function getDistinctLanguages(): Promise<string[]> {
   return uniqueLanguages.sort();
 }
 
+export async function getSongsCount(filters?: { is_archived?: boolean; is_visible?: boolean }): Promise<number> {
+  let query = supabase
+    .from("songs")
+    .select("*", { count: "exact", head: true });
+
+  if (filters?.is_archived !== undefined) {
+    query = query.eq("is_archived", filters.is_archived);
+  } else {
+    query = query.eq("is_archived", false);
+  }
+
+  if (filters?.is_visible !== undefined) {
+    query = query.eq("is_visible", filters.is_visible);
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to fetch songs count: ${error.message}`);
+  }
+
+  return count || 0;
+}
+
+export async function getRecentlyUpdatedSongs(limit: number = 5): Promise<Song[]> {
+  const { data, error } = await supabase
+    .from("songs")
+    .select("*")
+    .eq("is_archived", false)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Failed to fetch recently updated songs: ${error.message}`);
+  }
+
+  return data || [];
+}
+

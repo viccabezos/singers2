@@ -273,3 +273,46 @@ export async function getPlaylistSongCount(playlistId: string): Promise<number> 
   return count || 0;
 }
 
+export async function getPlaylistsCount(filters?: { is_archived?: boolean; status?: PlaylistStatus | PlaylistStatus[] }): Promise<number> {
+  let query = supabase
+    .from("playlists")
+    .select("*", { count: "exact", head: true });
+
+  if (filters?.is_archived === true) {
+    query = query.eq("status", "archived");
+  } else if (filters?.is_archived === false) {
+    query = query.neq("status", "archived");
+  }
+
+  if (filters?.status !== undefined) {
+    if (Array.isArray(filters.status)) {
+      query = query.in("status", filters.status);
+    } else {
+      query = query.eq("status", filters.status);
+    }
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to fetch playlists count: ${error.message}`);
+  }
+
+  return count || 0;
+}
+
+export async function getRecentlyUpdatedPlaylists(limit: number = 5): Promise<Playlist[]> {
+  const { data, error } = await supabase
+    .from("playlists")
+    .select("*")
+    .neq("status", "archived")
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Failed to fetch recently updated playlists: ${error.message}`);
+  }
+
+  return data || [];
+}
+
