@@ -21,6 +21,7 @@ import {
   type PlaceResult,
   type MapLocation,
 } from "@/shared/ui";
+import type { DashboardStatus } from "@/shared/ui/status-badge";
 import { createEventAction } from "./actions";
 import {
   updateEventAction,
@@ -223,7 +224,7 @@ export function EventForm({ event }: EventFormProps) {
           <span className="font-medium text-zinc-900 dark:text-zinc-50">
             {item.name}
           </span>
-          <StatusBadge variant={item.status as "visible" | "hidden" | "in_progress"} />
+          <StatusBadge status={item.status as DashboardStatus} />
         </div>
       ),
     },
@@ -342,7 +343,7 @@ export function EventForm({ event }: EventFormProps) {
                 <span className="text-sm text-zinc-900 dark:text-zinc-50">
                   {playlist.name}
                 </span>
-                <StatusBadge variant={playlist.status as "visible" | "hidden" | "in_progress"} />
+                <StatusBadge status={playlist.status as DashboardStatus} />
               </div>
             ),
             getItemId: (playlist) => playlist.id,

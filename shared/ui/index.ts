@@ -3,7 +3,10 @@ export { AdminPageLayout, PageHeader } from "./admin-page-layout";
 export { Breadcrumbs, type BreadcrumbItem } from "./breadcrumbs";
 
 // Status and badges
-export { StatusBadge, VisibilityBadge } from "./status-badge";
+export {
+  StatusBadge,
+  type DashboardStatus,
+} from "./status-badge";
 
 // Empty states
 export { EmptyState } from "./empty-state";

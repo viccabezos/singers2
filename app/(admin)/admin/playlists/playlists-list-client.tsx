@@ -69,9 +69,7 @@ export function PlaylistsListClient({ playlists: initialPlaylists }: PlaylistsLi
     {
       key: "status",
       header: "Status",
-      render: (playlist) => (
-        <StatusBadge variant={playlist.status as PlaylistStatus} compactOnMobile />
-      ),
+      render: (playlist) => <StatusBadge status={playlist.status} />,
     },
     {
       key: "actions",

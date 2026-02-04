@@ -50,12 +50,15 @@ export function DraftAlert({
 
   return (
     <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+      <div className="flex gap-2">
+
       <AlertCircleIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
       <AlertTitle className="text-amber-800 dark:text-amber-200">
         Unpublished Items
       </AlertTitle>
+      </div>
       <AlertDescription className="text-amber-700 dark:text-amber-300">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+        <div className="flex flex-wrap items-center gap-x-10 gap-y-1 mt-1">
           {items.map((item, index) => (
             <span key={item.href} className="flex items-center gap-1">
               {index > 0 && <span className="text-amber-400">•</span>}

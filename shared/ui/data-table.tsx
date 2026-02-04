@@ -117,7 +117,7 @@ export function DataTable<T extends { id: string }>({
           {data.map((item, index) => (
             <TableRow 
               key={item.id}
-              className={index % 2 === 1 ? "bg-zinc-50 dark:bg-zinc-800/50" : ""}
+              className={index % 2 === 1 ? "bg-zinc-100 dark:bg-zinc-800/50" : ""}
             >
               {selectable && (
                 <TableCell>

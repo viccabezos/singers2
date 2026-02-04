@@ -245,7 +245,7 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
                 // Past events are dimmed
                 past && !isCurrent && "opacity-60",
                 // Alternating rows (only for non-current, non-highlighted)
-                !isCurrent && index % 2 === 1 && "bg-zinc-50/50 dark:bg-zinc-800/30",
+                !isCurrent && index % 2 === 1 && "bg-zinc-100 dark:bg-zinc-800/50",
                 // Default border
                 !isCurrent && "border-zinc-200 dark:border-zinc-800"
               )}
@@ -353,7 +353,7 @@ export function EventsListClient({ events: initialEvents }: EventsListClientProp
 
                   {/* Past badge for past events (not current) */}
                   {past && !isCurrent && (
-                    <StatusBadge variant="past" className="text-[10px] px-1.5 py-0.5" />
+                    <StatusBadge status="past" className="text-[10px] px-1.5 py-0.5" />
                   )}
 
                   {/* Chevron */}

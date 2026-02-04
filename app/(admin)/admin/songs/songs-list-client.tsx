@@ -10,12 +10,13 @@ import {
   AdminPageLayout,
   DataTable,
   BulkActionsBar,
-  VisibilityBadge,
+  StatusBadge,
   FilterPanel,
   EditButton,
   ArchiveLink,
   type Column,
 } from "@/shared/ui";
+import { getSongStatus } from "@/shared/lib/status-helpers";
 import { Button } from "@/components/ui/button";
 
 interface SongsListClientProps {
@@ -158,7 +159,7 @@ export function SongsListClient({ songs: initialSongs, languages }: SongsListCli
     {
       key: "visibility",
       header: "Visibility",
-      render: (song) => <VisibilityBadge isVisible={song.is_visible} compactOnMobile />,
+      render: (song) => <StatusBadge status={getSongStatus(song)} />,
     },
     {
       key: "actions",

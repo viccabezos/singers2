@@ -47,21 +47,21 @@ export default async function DashboardPage() {
     {
       href: "/admin/songs",
       title: "Songs",
-      description: "Manage your song library",
+      // description: "Manage your song library",
       icon: MusicIcon,
       count: songsCount,
     },
     {
       href: "/admin/playlists",
       title: "Playlists",
-      description: "Organize songs into playlists",
+      // description: "Organize songs into playlists",
       icon: ListMusicIcon,
       count: playlistsCount,
     },
     {
       href: "/admin/events",
       title: "Events",
-      description: "Manage your choir events",
+      // description: "Manage your choir events",
       icon: CalendarIcon,
       count: eventsCount,
     },
@@ -100,13 +100,27 @@ export default async function DashboardPage() {
                           {item.count}
                         </span>
                       </div>
-                      <CardDescription>{item.description}</CardDescription>
+                      {/* <CardDescription>{item.description}</CardDescription> */}
                     </div>
                   </div>
                 </CardHeader>
               </Card>
             </Link>
           ))}
+        </div>
+
+        {/* Recent Activity and Calendar */}
+        <div className="mt-8 grid gap-6 lg:grid-cols-3 items-stretch">
+          <div className="lg:col-span-1 h-full">
+            <RecentActivity
+              songs={recentSongs}
+              playlists={recentPlaylists}
+              events={recentEvents}
+            />
+          </div>
+          <div className="lg:col-span-2 h-full">
+            <EventCalendar events={events} />
+          </div>
         </div>
 
         {/* Draft Alert */}
@@ -116,16 +130,6 @@ export default async function DashboardPage() {
             draftPlaylistsCount={draftPlaylistsCount}
             hiddenEventsCount={hiddenEventsCount}
           />
-        </div>
-
-        {/* Recent Activity and Calendar */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <RecentActivity 
-            songs={recentSongs}
-            playlists={recentPlaylists}
-            events={recentEvents}
-          />
-          <EventCalendar events={events} />
         </div>
       </div>
     </div>
