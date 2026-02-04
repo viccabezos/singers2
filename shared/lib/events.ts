@@ -451,3 +451,42 @@ export async function getRecentlyUpdatedEvents(limit: number = 5): Promise<Event
   return data || [];
 }
 
+export async function getUpcomingEvents(limit: number = 10): Promise<Event[]> {
+  const today = new Date().toISOString().split("T")[0];
+  
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("is_visible", true)
+    .eq("is_archived", false)
+    .gte("event_date", today)
+    .order("event_date", { ascending: true })
+    .order("event_time", { ascending: true, nullsFirst: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Failed to fetch upcoming events: ${error.message}`);
+  }
+
+  return data || [];
+}
+
+export async function getAllUpcomingEvents(): Promise<Event[]> {
+  const today = new Date().toISOString().split("T")[0];
+  
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("is_visible", true)
+    .eq("is_archived", false)
+    .gte("event_date", today)
+    .order("event_date", { ascending: true })
+    .order("event_time", { ascending: true, nullsFirst: false });
+
+  if (error) {
+    throw new Error(`Failed to fetch all upcoming events: ${error.message}`);
+  }
+
+  return data || [];
+}
+
