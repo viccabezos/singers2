@@ -1,1 +1,1 @@
-export { RecentActivity } from "./ui/recent-activity";
+export { RecentActivity } from "./recent-activity";

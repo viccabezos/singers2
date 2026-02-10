@@ -110,15 +110,15 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Activity and Calendar */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-3 items-stretch">
-          <div className="lg:col-span-1 h-full">
+        <div className="mt-8 grid gap-6 lg:grid-cols-3 items-start ">
+          <div className="lg:col-span-1">
             <RecentActivity
               songs={recentSongs}
               playlists={recentPlaylists}
               events={recentEvents}
             />
           </div>
-          <div className="lg:col-span-2 h-full">
+          <div className="lg:col-span-2">
             <EventCalendar events={events} />
           </div>
         </div>

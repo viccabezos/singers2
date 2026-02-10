@@ -194,7 +194,7 @@ function TabButton({ tab }: { tab: TabType }) {
       value={tab}
       className={cn(
         "text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm",
-        "transition-all duration-200"
+        "transition-all duration-200 px-2 sm:px-3"
       )}
     >
       <Icon className="h-3.5 w-3.5" />
@@ -220,15 +220,14 @@ export function RecentActivity({
   };
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="shrink-0">
+    <Card className="max-h-[550px] min-h-[550px] overflow-hidden ">
+      <CardHeader className="">
         <CardTitle className="text-base">Recently Updated</CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 flex-1 flex flex-col min-h-0">
+      <CardContent className="pt-0">
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as TabType)}
-          className="flex flex-col h-full"
         >
           <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/50">
             {(Object.keys(TAB_CONFIG) as TabType[]).map((tab) => (
@@ -237,7 +236,7 @@ export function RecentActivity({
           </TabsList>
 
           {(Object.keys(TAB_CONFIG) as TabType[]).map((tab) => (
-            <TabsContent key={tab} value={tab} className="mt-3 flex-1 min-h-0 overflow-hidden">
+            <TabsContent key={tab} value={tab} className="mt-0 max-h-[400px] overflow-y-auto">
               <ActivityList items={tabContent[tab]} activeTab={tab} />
             </TabsContent>
           ))}

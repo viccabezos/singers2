@@ -148,14 +148,14 @@ export function EventCalendar({ events }: EventCalendarProps) {
   };
 
   return (
-    <Card>
-      <CardHeader className="">
+    <Card className="max-h-[550px] min-h-[550px] ">
+      <CardHeader>
         <CardTitle className="text-lg">Événements</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col lg:flex-row lg:gap-6">
           {/* Calendar */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <Calendar
               mode="single"
               month={month}
@@ -207,7 +207,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
                 Aucun événement ce mois
               </p>
             ) : (
-              <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1 mt-2">
+              <div className="space-y-2  overflow-y-auto pr-1 mt-2">
                 {monthEvents.map((event) => {
                   const eventType = getEventType(event);
                   const eventDate = parseISO(event.event_date);
