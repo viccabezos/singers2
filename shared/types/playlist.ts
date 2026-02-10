@@ -5,6 +5,8 @@ export interface Playlist {
   name: string;
   description: string | null;
   status: PlaylistStatus;
+  featured: boolean;
+  featured_order: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +33,8 @@ export interface PlaylistUpdateInput {
   name?: string;
   description?: string | null;
   status?: PlaylistStatus;
+  featured?: boolean;
+  featured_order?: number | null;
 }
 
 export interface PlaylistFilters {

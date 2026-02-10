@@ -91,6 +91,55 @@ export async function getVisiblePlaylistById(id: string): Promise<Playlist | nul
   return data;
 }
 
+export async function getFeaturedPlaylists(): Promise<PlaylistWithSongCount[]> {
+  try {
+    const { data, error } = await supabase
+      .from("playlists")
+      .select("*, playlist_songs(count)")
+      .eq("featured", true)
+      .eq("status", "visible")
+      .order("featured_order", { ascending: true })
+      .limit(3);
+
+    if (error) {
+      // If column doesn't exist (migration not run), return empty array gracefully
+      if (error.message.includes("column") && error.message.includes("featured")) {
+        console.warn("Featured playlists column not found. Migration may need to be run.");
+        return [];
+      }
+      throw new Error(`Failed to fetch featured playlists: ${error.message}`);
+    }
+
+    // Transform to include song_count
+    return (data || []).map((playlist: any) => ({
+      ...playlist,
+      song_count: playlist.playlist_songs?.[0]?.count || 0,
+    }));
+  } catch (error) {
+    console.error("Error fetching featured playlists:", error);
+    // Return empty array on any error to prevent page crash
+    return [];
+  }
+}
+
+export async function getVisiblePlaylists(): Promise<PlaylistWithSongCount[]> {
+  const { data, error } = await supabase
+    .from("playlists")
+    .select("*, playlist_songs(count)")
+    .eq("status", "visible")
+    .order("name", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to fetch playlists: ${error.message}`);
+  }
+
+  // Transform to include song_count
+  return (data || []).map((playlist: any) => ({
+    ...playlist,
+    song_count: playlist.playlist_songs?.[0]?.count || 0,
+  }));
+}
+
 export async function createPlaylist(input: PlaylistCreateInput): Promise<Playlist> {
   const { data, error } = await supabase
     .from("playlists")

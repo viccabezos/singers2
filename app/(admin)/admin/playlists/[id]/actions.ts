@@ -6,13 +6,29 @@ import {
   addSongToPlaylist,
   removeSongFromPlaylist,
   reorderPlaylistSongs,
+  getPlaylists,
 } from "@/shared/lib/playlists";
 import { revalidatePath } from "next/cache";
 
 export async function updatePlaylistAction(id: string, data: any) {
   try {
+    // Validate max 3 featured playlists
+    if (data.featured === true) {
+      const allPlaylists = await getPlaylists();
+      const featuredPlaylists = allPlaylists.filter(
+        (p) => p.featured === true && p.id !== id
+      );
+      
+      if (featuredPlaylists.length >= 3) {
+        return {
+          error: "Maximum 3 playlists can be featured. Please unfeature another playlist first.",
+        };
+      }
+    }
+    
     await updatePlaylist(id, data);
     revalidatePath("/admin/playlists");
+    revalidatePath("/");
     return { success: true };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Failed to update playlist" };

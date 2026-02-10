@@ -67,6 +67,18 @@ export function PlaylistsListClient({ playlists: initialPlaylists }: PlaylistsLi
       ),
     },
     {
+      key: "featured",
+      header: "Featured",
+      render: (playlist) =>
+        playlist.featured ? (
+          <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+            #{playlist.featured_order}
+          </span>
+        ) : (
+          <span className="text-sm text-zinc-400 dark:text-zinc-600">—</span>
+        ),
+    },
+    {
       key: "status",
       header: "Status",
       render: (playlist) => <StatusBadge status={playlist.status} />,

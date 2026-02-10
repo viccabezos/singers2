@@ -96,6 +96,27 @@ export async function getVisibleSongById(id: string): Promise<Song | null> {
   return data;
 }
 
+export async function getVisibleSongs(searchQuery?: string): Promise<Song[]> {
+  let query = supabase
+    .from("songs")
+    .select("*")
+    .eq("is_visible", true)
+    .eq("is_archived", false)
+    .order("title", { ascending: true });
+
+  if (searchQuery) {
+    query = query.ilike("title", `%${searchQuery}%`);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to fetch songs: ${error.message}`);
+  }
+
+  return data || [];
+}
+
 export async function createSong(input: SongCreateInput): Promise<Song> {
   const { data, error } = await supabase
     .from("songs")

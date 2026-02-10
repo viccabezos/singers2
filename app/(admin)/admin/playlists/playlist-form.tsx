@@ -14,6 +14,7 @@ import {
   TextField,
   TextAreaField,
   SelectField,
+  CheckboxField,
   SortableContentTable,
   type ContentColumn,
 } from "@/shared/ui";
@@ -49,6 +50,8 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
     name: playlist?.name || "",
     description: playlist?.description || "",
     status: playlist?.status || "hidden" as PlaylistStatus,
+    featured: playlist?.featured || false,
+    featured_order: playlist?.featured_order || null as number | null,
   });
 
   const [songs, setSongs] = useState<PlaylistSongItem[]>(playlistSongs);
@@ -84,6 +87,8 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
           name: formData.name,
           description: formData.description || null,
           status: formData.status,
+          featured: formData.featured,
+          featured_order: formData.featured ? formData.featured_order : null,
         };
 
         if (playlist) {
@@ -230,6 +235,34 @@ export function PlaylistForm({ playlist, playlistSongs = [], availableSongs = []
           onChange={(v) => setFormData({ ...formData, status: v as PlaylistStatus })}
           options={STATUS_OPTIONS}
         />
+
+        <CheckboxField
+          label="Featured on Homepage"
+          id="featured"
+          checked={formData.featured}
+          onChange={(checked) => {
+            setFormData({ 
+              ...formData, 
+              featured: checked,
+              featured_order: checked ? (formData.featured_order || 1) : null
+            });
+          }}
+        />
+
+        {formData.featured && (
+          <TextField
+            label="Featured Order"
+            id="featured_order"
+            type="number"
+            value={formData.featured_order?.toString() || "1"}
+            onChange={(v) => {
+              const order = v ? parseInt(v, 10) : null;
+              setFormData({ ...formData, featured_order: order });
+            }}
+            placeholder="1, 2, or 3"
+            error={errors.featured_order}
+          />
+        )}
       </FormSection>
 
       {/* Song Management (only for existing playlists) */}
