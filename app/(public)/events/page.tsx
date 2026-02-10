@@ -67,14 +67,7 @@ export default async function EventsPage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-            © {new Date().getFullYear()} Les Chanteurs. All rights reserved.
-          </p>
-        </div>
-      </footer>
+
     </>
   );
 }

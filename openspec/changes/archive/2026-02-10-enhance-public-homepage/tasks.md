@@ -268,28 +268,10 @@
   - How to set featured playlists
   - Best practices for homepage content
   - ✅ DONE: Created comprehensive admin guide at `docs/admin-guide.md`
-- [ ] 11.3 Populate sample/default content
-  - Default tagline and about text
-  - Example social media links (if available)
-  - Placeholder photos or guidelines
 
-## 12. Deployment Preparation
-
-- [ ] 12.1 Review all database migrations
-  - Ensure migrations are idempotent
-  - Test rollback procedures
-- [ ] 12.2 Create deployment checklist
-  - Migration steps
-  - Environment variables (if any new ones)
-  - Supabase Storage bucket configuration
-- [ ] 12.3 Update environment documentation
-  - Document new Supabase Storage requirements
-  - Document Google Maps API usage (already in use)
-- [ ] 12.4 Plan content population
-  - Coordinate with admins to populate settings
-  - Plan photo uploads
-  - Select featured playlists
-
+**Note:** Remaining items moved to separate changes:
+- Sample content population → `test-social-links-and-polish`
+- Deployment preparation → `prepare-for-deployment`
 ## Dependencies and Notes
 
 **Dependencies**:

@@ -234,26 +234,36 @@
 ### Current State (February 2026)
 
 **Completed Features**:
-- ✅ Public homepage with complete widget structure
+- ✅ Public homepage with complete widget structure (7 sections)
 - ✅ Choir settings management (dynamic content)
-- ✅ Photo gallery management system
+- ✅ Photo gallery management system (upload, reorder, bulk delete)
+- ✅ Featured playlists functionality
+- ✅ Browse pages for songs and playlists
 - ✅ Admin dashboard and navigation
 - ✅ Events, playlists, and songs CRUD operations
 - ✅ Lyrics display with font-size control
 - ✅ Dark mode support
 - ✅ Mobile-first responsive design throughout
+- ✅ Comprehensive admin documentation
+
+**Active Changes**:
+- `prepare-for-deployment` - Production deployment preparation
+- `test-social-links-and-polish` - Social links testing and final polish
 
 **Next Phase**:
-- Browse pages for songs and playlists (`/songs`, `/playlists`)
-- Featured playlists toggle in admin
-- Additional filtering and search capabilities
-- Performance optimization
-- Comprehensive UX testing with real users
+- User accounts for choir members (vs single admin password)
+- Analytics/metrics for tracking usage
+- Data export/backup functionality
+- Integration with external services (social media auto-posting)
+- AI assistant for finding lyrics
+- QR codes for quick song access
+- Performance monitoring
 
 ### Questions for Future Consideration
 
 - How should "current event" be determined for the public homepage?
-- Should there be user accounts for choir members (vs single admin password)?
+- Should we add user accounts for choir members?
 - What analytics/metrics are needed to track usage?
 - Should there be a way to export/backup data?
 - Integration with external services (social media auto-posting, etc.)?
+- Monetization options to cover hosting costs?

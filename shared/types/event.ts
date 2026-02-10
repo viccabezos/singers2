@@ -10,6 +10,7 @@ export interface Event {
   is_visible: boolean;
   is_current: boolean;
   is_archived: boolean;
+  auto_archive_exempt: boolean; // If true, won't be auto-archived
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +47,7 @@ export type CreateEventInput = {
   longitude?: number | null;
   is_visible?: boolean;
   is_current?: boolean;
+  auto_archive_exempt?: boolean;
 };
 
 export type UpdateEventInput = Partial<CreateEventInput> & {

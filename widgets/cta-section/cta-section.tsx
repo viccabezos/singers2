@@ -25,7 +25,7 @@ export async function CtaSection() {
               Join the Choir
             </a>
             <a
-              href="#events"
+              href="/events"
               className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-white px-6 py-3 text-base font-medium text-white transition-all hover:bg-white hover:text-indigo-600 dark:border-indigo-200 dark:hover:bg-indigo-200 dark:hover:text-indigo-900"
             >
               <Music className="h-5 w-5" />

@@ -118,3 +118,55 @@ export async function reorderEventPlaylistsAction(eventId: string, playlistIds: 
   }
 }
 
+export async function bulkArchiveEventsAction(ids: string[]) {
+  try {
+    // Archive all selected events
+    const results = await Promise.all(
+      ids.map(async (id) => {
+        try {
+          await archiveEvent(id);
+          return { id, success: true };
+        } catch (error) {
+          return { id, success: false, error: error instanceof Error ? error.message : "Unknown error" };
+        }
+      })
+    );
+
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+
+    revalidatePath("/admin/events");
+    
+    if (failCount > 0) {
+      return {
+        success: successCount > 0,
+        error: `${failCount} event(s) failed to archive`,
+        archivedCount: successCount,
+        failedCount: failCount,
+      };
+    }
+
+    return {
+      success: true,
+      archivedCount: successCount,
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Failed to archive events",
+    };
+  }
+}
+
+export async function updateEventAutoArchiveExemptAction(id: string, exempt: boolean) {
+  try {
+    await updateEvent(id, { auto_archive_exempt: exempt });
+    revalidatePath("/admin/events");
+    revalidatePath(`/admin/events/${id}`);
+    return { success: true };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Failed to update auto-archive exempt status",
+    };
+  }
+}
+

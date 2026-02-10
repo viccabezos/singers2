@@ -18,15 +18,23 @@ export interface EventFilters {
   is_archived?: boolean;
   upcoming?: boolean; // Only future events
   past?: boolean; // Only past events
+  sortDesc?: boolean; // Sort descending (newest first)
+  recent?: boolean; // Last 30 days
+  thisMonth?: boolean; // Current month
+  lastMonth?: boolean; // Previous month
+  is_current?: boolean; // Featured/current events
 }
 
 export async function getEvents(
   filters: EventFilters = {}
 ): Promise<EventWithPlaylistCount[]> {
+  // Default to descending order (newest first) for admin
+  const sortAscending = filters.sortDesc === false;
+  
   let query = supabase
     .from("events")
     .select("*, event_playlists(count)")
-    .order("event_date", { ascending: true });
+    .order("event_date", { ascending: sortAscending });
 
   // Filter archived/non-archived
   if (filters.is_archived === true) {
@@ -55,6 +63,41 @@ export async function getEvents(
   if (filters.past) {
     const today = new Date().toISOString().split("T")[0];
     query = query.lt("event_date", today);
+  }
+
+  // Filter recent events (last 30 days)
+  if (filters.recent) {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    query = query
+      .gte("event_date", thirtyDaysAgo.toISOString().split("T")[0])
+      .lte("event_date", today.toISOString().split("T")[0]);
+  }
+
+  // Filter this month
+  if (filters.thisMonth) {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    query = query
+      .gte("event_date", firstDay.toISOString().split("T")[0])
+      .lte("event_date", lastDay.toISOString().split("T")[0]);
+  }
+
+  // Filter last month
+  if (filters.lastMonth) {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+    query = query
+      .gte("event_date", firstDay.toISOString().split("T")[0])
+      .lte("event_date", lastDay.toISOString().split("T")[0]);
+  }
+
+  // Filter by is_current (featured)
+  if (filters.is_current !== undefined) {
+    query = query.eq("is_current", filters.is_current);
   }
 
   const { data, error } = await query;
@@ -166,6 +209,7 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
       longitude: input.longitude ?? null,
       is_visible: input.is_visible ?? false,
       is_current: input.is_current ?? false,
+      auto_archive_exempt: input.auto_archive_exempt ?? false,
     })
     .select()
     .single();
@@ -488,5 +532,130 @@ export async function getAllUpcomingEvents(): Promise<Event[]> {
   }
 
   return data || [];
+}
+
+// ============================================================================
+// Auto-Archive Logic
+// ============================================================================
+
+export interface AutoArchiveResult {
+  archivedCount: number;
+  archivedEvents: { id: string; name: string; event_date: string }[];
+}
+
+export async function autoArchiveOldEvents(): Promise<AutoArchiveResult> {
+  const today = new Date();
+  const cutoffDate = new Date(today);
+  cutoffDate.setDate(cutoffDate.getDate() - 14);
+  const cutoffDateStr = cutoffDate.toISOString().split("T")[0];
+
+  // Find events older than 14 days that are not archived and not exempt
+  const { data: oldEvents, error: findError } = await supabase
+    .from("events")
+    .select("id, name, event_date")
+    .eq("is_archived", false)
+    .eq("auto_archive_exempt", false)
+    .lt("event_date", cutoffDateStr);
+
+  if (findError) {
+    throw new Error(`Failed to find old events: ${findError.message}`);
+  }
+
+  if (!oldEvents || oldEvents.length === 0) {
+    return { archivedCount: 0, archivedEvents: [] };
+  }
+
+  const eventIds = oldEvents.map(e => e.id);
+
+  // Archive all old events and unfeature them
+  const { error: updateError } = await supabase
+    .from("events")
+    .update({ 
+      is_archived: true, 
+      is_current: false,
+      updated_at: new Date().toISOString()
+    })
+    .in("id", eventIds);
+
+  if (updateError) {
+    throw new Error(`Failed to archive old events: ${updateError.message}`);
+  }
+
+  return {
+    archivedCount: oldEvents.length,
+    archivedEvents: oldEvents
+  };
+}
+
+export function getDaysUntilArchive(eventDate: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const event = new Date(eventDate);
+  event.setHours(0, 0, 0, 0);
+  
+  const diffTime = today.getTime() - event.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Days until archive (14 days grace period)
+  return Math.max(0, 14 - diffDays);
+}
+
+export function isEventPast(eventDate: string): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const event = new Date(eventDate);
+  event.setHours(0, 0, 0, 0);
+  
+  return event < today;
+}
+
+export function isEventToday(eventDate: string): boolean {
+  const today = new Date().toISOString().split("T")[0];
+  return eventDate === today;
+}
+
+export function getEventStatus(eventDate: string): 'today' | 'tomorrow' | 'thisWeek' | 'upcoming' | 'past' {
+  if (isEventToday(eventDate)) return 'today';
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const event = new Date(eventDate);
+  event.setHours(0, 0, 0, 0);
+  
+  const diffTime = event.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 1) return 'tomorrow';
+  if (diffDays > 1 && diffDays <= 7) return 'thisWeek';
+  if (isEventPast(eventDate)) return 'past';
+  
+  return 'upcoming';
+}
+
+export function getDaysAgo(eventDate: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const event = new Date(eventDate);
+  event.setHours(0, 0, 0, 0);
+  
+  const diffTime = today.getTime() - event.getTime();
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+}
+
+export function getGracePeriodStatus(eventDate: string): {
+  daysRemaining: number;
+  isWarning: boolean;
+  isCritical: boolean;
+} {
+  const daysRemaining = getDaysUntilArchive(eventDate);
+  return {
+    daysRemaining,
+    isWarning: daysRemaining > 0 && daysRemaining <= 7,
+    isCritical: daysRemaining > 0 && daysRemaining <= 3,
+  };
 }
 
