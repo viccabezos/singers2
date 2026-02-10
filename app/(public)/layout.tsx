@@ -1,4 +1,5 @@
 import { PublicHeader } from "@/widgets/public-header";
+import { PublicFooter } from "@/widgets/public-footer";
 
 export default function PublicLayout({
   children,
@@ -6,9 +7,10 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
       <PublicHeader />
-      <div className="pt-0">{children}</div>
+      <div className="flex-1">{children}</div>
+      <PublicFooter />
     </div>
   );
 }
