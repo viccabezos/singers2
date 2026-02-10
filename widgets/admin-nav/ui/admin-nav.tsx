@@ -7,6 +7,7 @@ import {
   MusicIcon,
   ListMusicIcon,
   CalendarIcon,
+  ImageIcon,
   SettingsIcon,
   LogOutIcon,
   MenuIcon,
@@ -60,6 +61,11 @@ const navItems = [
     title: "Events",
     href: "/admin/events",
     icon: CalendarIcon,
+  },
+  {
+    title: "Photos",
+    href: "/admin/photos",
+    icon: ImageIcon,
   },
   {
     title: "Settings",

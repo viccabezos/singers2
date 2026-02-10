@@ -163,9 +163,6 @@ The public app SHALL use the enhanced PublicHeader widget on all pages.
 - **AND** navigation is consistent across pages
 - **AND** current page is indicated
 
-### Requirement: Enhanced Footer
-The footer SHALL use the PublicFooter widget with navigation and social links.
-
 #### Scenario: Footer on all pages
 - **WHEN** a user views any public page footer
 - **THEN** the PublicFooter widget is displayed

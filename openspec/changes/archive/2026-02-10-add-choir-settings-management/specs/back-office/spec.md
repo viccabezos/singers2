@@ -127,8 +127,8 @@ The settings form SHALL validate user input.
 - **THEN** the form is accepted
 - **AND** empty values are saved
 
-### Requirement: Graceful Degradation
-Widgets SHALL gracefully handle missing settings data.
+### Requirement: Settings Graceful Degradation
+Widgets SHALL gracefully handle missing or empty choir settings data.
 
 #### Scenario: Settings not loaded
 - **GIVEN** settings cannot be fetched from database
