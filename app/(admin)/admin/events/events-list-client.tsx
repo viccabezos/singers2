@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   PlusIcon,
@@ -34,6 +34,16 @@ import {
 } from "@/shared/ui";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn, formatEventTime } from "@/lib/utils";
 
 interface EventsListClientProps {
@@ -47,6 +57,7 @@ export function EventsListClient({ events: initialEvents, autoArchiveResult }: E
   const [events, setEvents] = useState(initialEvents);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkArchiving, setIsBulkArchiving] = useState(false);
+  const [showBulkArchiveDialog, setShowBulkArchiveDialog] = useState(false);
   const [filters, setFilters] = useState({
     search: searchParams?.get("search") || "",
     visibility: searchParams?.get("visibility") || "all",
@@ -75,16 +86,23 @@ export function EventsListClient({ events: initialEvents, autoArchiveResult }: E
   };
 
   const handleBulkArchive = async () => {
-    if (selectedIds.size === 0) return;
-    
-    if (!confirm(`Archive ${selectedIds.size} event(s)?`)) {
+    if (selectedIds.size === 0) {
+      toast.error("No events selected");
       return;
     }
 
+    setShowBulkArchiveDialog(true);
+  };
+
+  const confirmBulkArchive = async () => {
+    setShowBulkArchiveDialog(false);
     setIsBulkArchiving(true);
     try {
       const { bulkArchiveEventsAction } = await import("./[id]/actions");
-      const result = await bulkArchiveEventsAction(Array.from(selectedIds));
+      const ids = Array.from(selectedIds);
+      console.log("Archiving events:", ids);
+      const result = await bulkArchiveEventsAction(ids);
+      console.log("Archive result:", result);
 
       if (result.error) {
         toast.error("Failed to archive events", { description: result.error });
@@ -94,6 +112,7 @@ export function EventsListClient({ events: initialEvents, autoArchiveResult }: E
         router.refresh();
       }
     } catch (error) {
+      console.error("Archive error:", error);
       toast.error("Failed to archive events");
     } finally {
       setIsBulkArchiving(false);
@@ -137,17 +156,17 @@ export function EventsListClient({ events: initialEvents, autoArchiveResult }: E
     }
   }, [autoArchiveResult, router]);
 
-  const handleFilterChange = (id: string, value: string) => {
+  const handleFilterChange = useCallback((id: string, value: string) => {
     setFilters((prev) => ({ ...prev, [id]: value }));
-  };
+  }, []);
 
-  const handleApplyFilters = () => {
+  const handleApplyFilters = useCallback(() => {
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
     if (filters.visibility !== "all") params.set("visibility", filters.visibility);
     if (filters.time !== "all") params.set("time", filters.time);
     router.push(`/admin/events?${params.toString()}`);
-  };
+  }, [filters.search, filters.visibility, filters.time, router]);
 
   const handleSetCurrent = async (e: React.MouseEvent, id: string, name: string) => {
     e.preventDefault();
@@ -240,6 +259,9 @@ export function EventsListClient({ events: initialEvents, autoArchiveResult }: E
                 { value: "all", label: "All dates" },
                 { value: "upcoming", label: "Upcoming" },
                 { value: "past", label: "Past" },
+                { value: "recent", label: "Recent (30 days)" },
+                { value: "thisMonth", label: "This Month" },
+                { value: "lastMonth", label: "Last Month" },
               ],
             },
           ]}
@@ -548,6 +570,28 @@ export function EventsListClient({ events: initialEvents, autoArchiveResult }: E
       </div>
 
       <ArchiveLink href="/admin/events/archive" />
+
+      {/* Bulk Archive Confirmation Dialog */}
+      <AlertDialog open={showBulkArchiveDialog} onOpenChange={setShowBulkArchiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive {selectedIds.size} event(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              These events will be moved to the archive and will no longer appear in the main list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkArchiving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmBulkArchive}
+              disabled={isBulkArchiving}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isBulkArchiving ? 'Archiving...' : 'Archive'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminPageLayout>
   );
 }

@@ -20,6 +20,7 @@
 - [ ] 1.3.4 Tester le lien au clic
 
 ### 1.4 Standardisation Dark Mode
+- [ ] AVANT TOUT ajouter le bouton pour switch au dark mode sur admin et sur public projet. (il doit garder le status avec le navigateur exemple : le menu de ládmin )
 - [ ] 1.4.1 Audit de toutes les pages pour lister les backgrounds dark mode utilisés
 - [ ] 1.4.2 Créer liste des fichiers à modifier:
   - [ ] Event detail: changer `dark:bg-black` vers `dark:bg-zinc-950`
@@ -35,16 +36,16 @@
 ## 2. Harmonisation UX/UI
 
 ### 2.1 Décision UX - Events Cards vs DataTable
-- [ ] 2.1.1 Analyser pourquoi Events utilise Cards et Songs/Playlists utilisent DataTable
-- [ ] 2.1.2 Décision: Garder Cards ou migrer vers DataTable?
-- [ ] 2.1.3 Documenter la décision dans `openspec/changes/phase-1-stabilization-and-fixes/design.md`
-- [ ] 2.1.4 Si migration DataTable: implémenter et tester
-- [ ] 2.1.5 Si Cards: créer composant `EventCard` réutilisable
+- [ ] 2.1.1 Analyser pourquoi Events utilise Cards et Songs/Playlists utilisent DataTable, NON , c'est fait express 
+- [ ] 2.1.2 Décision: Garder Cards ou migrer vers DataTable? NON, c'est fait express
+- [ ] 2.1.3 Documenter la décision dans `openspec/changes/phase-1-stabilization-and-fixes/design.md` OUI
+- [ ] 2.1.4 Si migration DataTable: implémenter et tester NO
+- [ ] 2.1.5 Si Cards: créer composant `EventCard` réutilisable OUI
 
 ### 2.2 Décision UX - Bulk Actions
-- [ ] 2.2.1 Analyser si Playlists aurait besoin de bulk actions (archive, visibility toggle)
-- [ ] 2.2.2 Analyser si Events aurait besoin de bulk actions
-- [ ] 2.2.3 Décision: Ajouter à Playlists? Events? Aucun?
+- [ ] 2.2.1 Analyser si Playlists aurait besoin de bulk actions (archive, visibility toggle) NO pas besoin
+- [ ] 2.2.2 Analyser si Events aurait besoin de bulk actions DONE check
+- [ ] 2.2.3 Décision: Ajouter à Playlists? Events? Aucun? Aucun
 - [ ] 2.2.4 Documenter dans design.md
 - [ ] 2.2.5 Si ajout: implémenter et tester
 

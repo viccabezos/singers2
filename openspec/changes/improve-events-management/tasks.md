@@ -80,15 +80,15 @@
   - [x] Bulk actions bar when items selected
   - [x] "Archive Selected" button with confirmation
   - [x] Handles multiple events at once
-- [ ] 6.2 Add date range archiving
-  - [ ] "Archive All Before [Date]" button
-  - [ ] Preview what will be archived
-  - [ ] Confirm dialog
-- [ ] 6.3 Improve archive view
-  - [ ] Better archived events display
-  - [ ] Restore functionality (already exists)
-  - [ ] Permanent delete option
-  - [ ] Filter archived events by date
+- [~] 6.2 Date range archiving (MOVED TO V3 ROADMAP)
+  - "Archive All Before [Date]" button
+  - Preview what will be archived
+  - Confirm dialog
+- [~] 6.3 Improve archive view (MOVED TO V3 ROADMAP)
+  - Better archived events display
+  - Restore functionality (already exists)
+  - Permanent delete option
+  - Filter archived events by date
 
 ## 7. Enhanced Filtering and Search
 
@@ -99,9 +99,10 @@
   - [x] "Recent" filter (30 days)
   - [x] "This Month" filter
   - [x] "Last Month" filter
-- [ ] 7.3 Add event status filters
-  - [ ] Filter by: Featured, Visible, Hidden, Archived
-  - [ ] Multi-select filters
+  - [x] FilterPanel simplifié avec bouton "Apply" (pas de multi-select)
+- [~] 7.3 Multi-select status filters (MOVED TO V3)
+  - Filter by: Featured, Visible, Hidden, Archived en même temps
+  - Interface plus complexe, pas prioritaire
 
 ## 8. UI/UX Polish
 
@@ -111,32 +112,31 @@
   - [x] Mobile-optimized layout
   - [x] Date badge with month/day
   - [x] Alternating row colors
-- [ ] 8.2 Add empty states
-  - [ ] "No events today" state
-  - [ ] "No recent events" state
-  - [ ] "All caught up!" positive reinforcement
-- [ ] 8.3 Add loading states
-  - [ ] Skeleton loaders for event list
-  - [ ] Loading indicators for bulk actions
+- [~] 8.2 Empty states (REMOVED - not needed)
+- [~] 8.3 Loading states (MOVED TO V2 - global admin loading states)
+  - Skeleton loaders for event list
+  - Loading indicators for bulk actions
 
-## 9. Testing
+## 9. Testing (MOVED TO GLOBAL TESTING STRATEGY)
 
-- [ ] 9.1 Test auto-archive logic
-  - [ ] Create events with various dates
-  - [ ] Verify correct events are archived
-  - [ ] Verify exempt events are skipped
-- [ ] 9.2 Test featured event functionality
-  - [ ] Set/unset featured
-  - [ ] Verify UI updates
-  - [ ] Test replacement of featured event
-- [ ] 9.3 Test filtering and sorting
-  - [ ] All filter combinations
-  - [ ] Default view on page load
-  - [ ] Mobile responsiveness
-- [ ] 9.4 Test edge cases
-  - [ ] Event exactly 14 days old
-  - [ ] Event with auto_archive_exempt
-  - [ ] Multiple featured events (shouldn't happen)
+Tests will be implemented as part of comprehensive app-wide testing strategy:
+
+- [~] 9.1 Test auto-archive logic
+  - Create events with various dates
+  - Verify correct events are archived
+  - Verify exempt events are skipped
+- [~] 9.2 Test featured event functionality
+  - Set/unset featured
+  - Verify UI updates
+  - Test replacement of featured event
+- [~] 9.3 Test filtering and sorting
+  - All filter combinations
+  - Default view on page load
+  - Mobile responsiveness
+- [~] 9.4 Test edge cases
+  - Event exactly 14 days old
+  - Event with auto_archive_exempt
+  - Multiple featured events (shouldn't happen)
 
 ## 10. Documentation
 
@@ -165,11 +165,13 @@
 1. ✅ Database: auto_archive_exempt column added
 2. ✅ TypeScript: Types updated with new field
 3. ✅ Filters: Recent, This Month, Last Month
-4. ✅ Auto-archive: Respects exempt flag, shows notifications
-5. ✅ Status Badges: Today, Tomorrow, This Week, Past
-6. ✅ Grace Period: Visual indicator with warning colors
-7. ✅ Bulk Actions: Checkboxes + archive selected
-8. ✅ Featured Event: Enhanced UI with star badge
+4. ✅ FilterPanel: Simplifié avec bouton "Apply" (plus de loop)
+5. ✅ Auto-archive: Respects exempt flag, shows notifications
+6. ✅ Status Badges: Today, Tomorrow, This Week, Past
+7. ✅ Grace Period: Visual indicator with warning colors
+8. ✅ Bulk Actions: Checkboxes + archive selected
+9. ✅ Featured Event: Enhanced UI with star badge
+10. ✅ Bug fix: Breadcrumbs (pas de <li> dans <li>)
 
 ### Remaining (Future Iteration):
 - Date range archiving ("Archive All Before Date")
@@ -183,6 +185,8 @@
 
 - `shared/types/event.ts` - Added auto_archive_exempt field
 - `shared/lib/events.ts` - Updated filters and helper functions
+- `shared/ui/filter-panel.tsx` - Simplifié sans useEffect (évite les loops)
+- `shared/ui/breadcrumbs.tsx` - Fix: pas de <li> dans <li>
 - `app/(admin)/admin/events/page.tsx` - New filter params
 - `app/(admin)/admin/events/events-list-client.tsx` - Full UI overhaul
 - `app/(admin)/admin/events/[id]/actions.ts` - Bulk archive action
